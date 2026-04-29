@@ -1,0 +1,31 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Carrito mixto{% endblock %}
+
+{% block contenido %}
+  <section class="seccion">
+    <div class="titulo-seccion"><h2>Carrito combinado</h2></div>
+    <div class="rejilla rejilla-2">
+      <article class="card"><h3>Productos</h3><p>SSD NVMe 1TB · $1,899 MXN</p><p>RAM DDR4 16GB · $1,299 MXN</p></article>
+      <article class="card"><h3>Servicios</h3><p>Instalación de SSD · $250 MXN</p><p>Instalación de RAM · $220 MXN</p></article>
+    </div>
+
+    <article class="card" style="margin-top:1rem;">
+      <h3>Paquete recomendado</h3>
+      <div class="campo" style="margin-top:.6rem;">
+        <label>Selecciona una opción</label>
+        <select id="selector-paquete">
+          <option value="ninguno">Sin paquete</option>
+          <option value="sinergia">Paquete actualización de componentes</option>
+          <option value="mantenimiento">Paquete actualización + mantenimiento</option>
+        </select>
+      </div>
+      <p id="texto-resumen-paquete" style="margin-top:.6rem; color:#6a6f75;">No hay paquete aplicado actualmente.</p>
+      <div class="precio" style="margin-top:.7rem;">Total simulado: $3,668 MXN</div>
+      <div class="hero-acciones">
+        <a class="boton boton-primario" href="{{ url_for('login') }}">Continuar compra</a>
+        <a class="boton boton-outline" href="{{ url_for('productos') }}">Seguir explorando</a>
+      </div>
+    </article>
+  </section>
+{% endblock %}

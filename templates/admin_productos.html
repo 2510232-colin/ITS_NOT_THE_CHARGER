@@ -1,0 +1,58 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'productos' %}
+
+{% block titulo %}TechCare | Admin productos{% endblock %}
+
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <h2>{% if producto_edicion %}Editar producto{% else %}Agregar producto{% endif %}</h2>
+    <p style="color:#6a6f75; margin-top:.3rem;">Este módulo ya guarda productos en base de datos.</p>
+    <form method="POST" action="{{ url_for('admin_productos') }}" class="formulario" style="margin-top:.8rem;">
+      <input type="hidden" name="accion" value="{% if producto_edicion %}editar{% else %}crear{% endif %}" />
+      <input type="hidden" name="id_item" value="{{ producto_edicion.id if producto_edicion else '' }}" />
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Nombre</label><input type="text" name="nombre" value="{{ producto_edicion.nombre if producto_edicion else '' }}" required /></div>
+        <div class="campo"><label>Categoría</label><input type="text" name="categoria" value="{{ producto_edicion.categoria if producto_edicion else '' }}" required /></div>
+      </div>
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Precio</label><input type="number" step="0.01" name="precio" value="{{ producto_edicion.precio if producto_edicion else '' }}" required /></div>
+        <div class="campo"><label>Stock</label><input type="number" name="stock" value="{{ producto_edicion.stock if producto_edicion else '' }}" required /></div>
+      </div>
+      <div class="campo"><label>Descripción</label><textarea name="descripcion" required>{{ producto_edicion.descripcion if producto_edicion else '' }}</textarea></div>
+      <div class="hero-acciones">
+        <button class="boton boton-primario" type="submit">{% if producto_edicion %}Guardar cambios{% else %}Agregar producto{% endif %}</button>
+        {% if producto_edicion %}<a class="boton boton-outline" href="{{ url_for('admin_productos') }}">Cancelar edición</a>{% endif %}
+      </div>
+    </form>
+  </article>
+
+  <article class="seccion">
+    <h2>Listado de productos</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr>
+      {% for producto in productos %}
+        <tr>
+          <td>{{ producto.nombre }}</td>
+          <td>{{ producto.categoria }}</td>
+          <td>${{ '%.2f'|format(producto.precio) }}</td>
+          <td>{{ producto.stock }}</td>
+          <td class="celda-acciones">
+            <a class="boton boton-outline" href="{{ url_for('admin_productos', editar=producto.id) }}">Editar</a>
+            <form method="POST" action="{{ url_for('admin_productos') }}">
+              <input type="hidden" name="accion" value="eliminar" />
+              <input type="hidden" name="id_item" value="{{ producto.id }}" />
+              <button class="boton boton-outline" type="submit">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5">Sin productos registrados.</td></tr>
+      {% endfor %}
+    </table>
+  </article>
+{% endblock %}

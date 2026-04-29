@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block titulo %}Panel | TechCare{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="contenedor navbar-contenido">
+      <a class="logo" href="{{ url_for('inicio') }}">
+        <span class="logo-punto"></span>
+        <span>{{ titulo_panel }}</span>
+      </a>
+      <button id="boton-menu-movil" class="boton boton-menu-movil">Menú</button>
+      <nav id="menu-principal" class="menu-principal">
+        <a class="enlace-menu" href="{{ url_for('inicio') }}">Ver sitio</a>
+        <a class="enlace-menu" href="{{ url_for('logout') }}">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor panel">
+    <aside class="menu-panel">
+      {% block menu_lateral %}{% endblock %}
+    </aside>
+    <section class="panel-contenido">
+      {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+          <article class="seccion">
+            {% for categoria, mensaje in mensajes %}
+              <div class="alerta alerta-{{ categoria }}">{{ mensaje }}</div>
+            {% endfor %}
+          </article>
+        {% endif %}
+      {% endwith %}
+      {% block contenido_panel %}{% endblock %}
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/interacciones.js') }}"></script>
+</body>
+</html>

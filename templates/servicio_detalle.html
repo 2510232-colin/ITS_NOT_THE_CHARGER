@@ -1,0 +1,69 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Detalle de servicio{% endblock %}
+
+{% block contenido %}
+  {% if servicio %}
+    <section class="seccion">
+      <div class="titulo-seccion">
+        <h2>{{ servicio.titulo }}</h2>
+        <span class="badge">{{ servicio.categoria }}</span>
+      </div>
+      <p>{{ servicio.detalle_extendido.descripcion_larga }}</p>
+      <div class="rejilla rejilla-2" style="margin-top: 1rem;">
+        <article class="card">
+          <h3>Incluye</h3>
+          <ul class="lista-detalle">
+            {% for item in servicio.detalle_extendido.incluye %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+        <article class="card">
+          <h3>No incluye</h3>
+          <ul class="lista-detalle">
+            {% for item in servicio.detalle_extendido.no_incluye %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+      </div>
+      <div class="rejilla rejilla-2" style="margin-top: 1rem;">
+        <article class="card">
+          <h3>Ideal para</h3>
+          <ul class="lista-detalle">
+            {% for item in servicio.detalle_extendido.ideal_para %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Proceso recomendado</h3>
+          <ul class="lista-detalle">
+            {% for item in servicio.detalle_extendido.recomendaciones %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+      </div>
+      <div class="rejilla rejilla-2" style="margin-top: 1rem;">
+        <article class="card"><h3>Tiempo estimado</h3><p>{{ servicio.tiempo_estimado or 'Por definir' }}</p></article>
+        <article class="card"><h3>Precio aproximado</h3><div class="precio">{{ servicio.precio_mostrar }}</div></article>
+      </div>
+      <div class="rejilla rejilla-2" style="margin-top: 1rem;">
+        <article class="card"><h3>Modalidad</h3><p>{{ servicio.modalidad|capitalize }}</p></article>
+        <article class="card"><h3>Diagnóstico previo</h3><p>{{ 'Sí' if servicio.requiere_diagnostico else 'No' }}</p></article>
+      </div>
+      <div class="hero-acciones">
+        <a class="boton boton-primario" href="{{ url_for('cotizacion') }}">Cotizar este servicio</a>
+        <a class="boton boton-outline" href="{{ url_for('servicios') }}">Volver a catálogo</a>
+      </div>
+    </section>
+  {% else %}
+    <section class="seccion">
+      <h2>Sin servicio disponible</h2>
+      <p>Aún no hay servicios registrados en la base de datos.</p>
+      <a class="boton boton-outline" href="{{ url_for('servicios') }}">Volver</a>
+    </section>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'mensajes' %}
+
+{% block titulo %}TechCare | Chats{% endblock %}
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <h2>Bandeja de chats</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Folio</th><th>{% if usuario_actual.rol == 'cliente' %}Soporte{% else %}Cliente{% endif %}</th><th>Estado</th><th>Mensajes</th><th>Última interacción</th><th>Abrir</th></tr>
+      {% for chat in chats %}
+        <tr>
+          <td>{{ chat.folio }}</td>
+          <td>{{ chat.cliente }}</td>
+          <td><span class="estado {{ 'proceso' if chat.estado in ['En proceso', 'En revisión'] else 'listo' }}">{{ chat.estado }}</span></td>
+          <td>{{ chat.total_mensajes }}</td>
+          <td>{{ chat.ultima_interaccion or 'Sin mensajes' }}</td>
+          <td><a class="boton boton-outline" href="{{ url_for('ticket_detalle', id_ticket=chat.id_ticket) }}">Abrir chat</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay conversaciones por el momento.</td></tr>
+      {% endfor %}
+    </table>
+  </article>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Contacto{% endblock %}
+
+{% block contenido %}
+  <section class="seccion">
+    <h2>Contáctanos</h2>
+    <p>Ubicación base del proyecto: {{ negocio.ciudad }}.</p>
+    <div class="rejilla rejilla-2" style="margin-top: 1rem;">
+      <article class="card">
+        <h3>Información</h3>
+        <p>Horario estimado: lunes a sábado de 10:00 a 19:00.</p>
+        <p>Teléfono y WhatsApp se agregan en la siguiente fase.</p>
+      </article>
+      <article class="card">
+        <h3>Formulario rápido</h3>
+        <form class="formulario" method="POST" action="{{ url_for('contacto') }}">
+          <div class="campo"><label>Nombre</label><input type="text" name="nombre" placeholder="Tu nombre" required /></div>
+          <div class="campo"><label>Correo</label><input type="email" name="correo" placeholder="correo@ejemplo.com" required /></div>
+          <div class="campo"><label>Mensaje</label><textarea name="mensaje" placeholder="Escribe tu duda" required></textarea></div>
+          <button class="boton boton-primario" type="submit">Enviar mensaje</button>
+        </form>
+      </article>
+    </div>
+  </section>
+{% endblock %}

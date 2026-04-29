@@ -1,0 +1,36 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Detalle de producto{% endblock %}
+
+{% block contenido %}
+  {% if producto %}
+    <section class="seccion">
+      <div class="rejilla rejilla-2">
+        <article class="card"><div class="imagen-producto" style="height:260px"></div></article>
+        <article class="card">
+          <h2>{{ producto.titulo }}</h2>
+          <p class="precio">${{ "%.2f"|format(producto.precio) }} MXN</p>
+          <p>{{ producto.descripcion }}</p>
+          <span class="badge">Disponible en tienda</span>
+          <div class="hero-acciones">
+            <a class="boton boton-primario" href="{{ url_for('carrito') }}">Agregar al carrito</a>
+            <a class="boton boton-outline" href="{{ url_for('servicios') }}">Agregar instalación</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Especificaciones</h2>
+      <table class="tabla">
+        <tr><th>Información</th><td>Se agregará al cargar catálogo real.</td></tr>
+      </table>
+    </section>
+  {% else %}
+    <section class="seccion">
+      <h2>Sin producto disponible</h2>
+      <p>Aún no hay productos registrados en la base de datos.</p>
+      <a class="boton boton-outline" href="{{ url_for('productos') }}">Volver</a>
+    </section>
+  {% endif %}
+{% endblock %}

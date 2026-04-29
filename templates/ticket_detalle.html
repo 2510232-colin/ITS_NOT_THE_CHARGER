@@ -1,0 +1,68 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'tickets' %}
+
+{% block titulo %}TechCare | Detalle de ticket{% endblock %}
+
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <div class="titulo-seccion">
+      <h2>Ticket {{ ticket.folio }}</h2>
+      <span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span>
+    </div>
+    <div class="rejilla rejilla-2" style="margin-top:.7rem;">
+      <article class="card"><h3>Cliente</h3><p>{{ ticket.cliente }}</p></article>
+      <article class="card"><h3>Fecha de creación</h3><p>{{ ticket.fecha }}</p></article>
+      <article class="card"><h3>Servicio solicitado</h3><p>{{ ticket.servicio_solicitado }}</p></article>
+      <article class="card"><h3>Equipo</h3><p>{{ ticket.equipo }}</p></article>
+    </div>
+  </article>
+
+  <article class="seccion">
+    <div class="titulo-seccion"><h2>Trazabilidad de cotización</h2></div>
+    <div class="rejilla rejilla-2" style="margin-top:.7rem;">
+      <article class="card">
+        <h3>Precio estimado referencial</h3>
+        <p>{{ ticket.precio_estimado_mostrar }}</p>
+      </article>
+      <article class="card">
+        <h3>Política de domicilio aceptada</h3>
+        <p>{{ 'Sí' if ticket.acepta_politica_domicilio else 'No' }}</p>
+      </article>
+    </div>
+    <article class="card" style="margin-top:.9rem;">
+      <h3>Descripción del problema registrada</h3>
+      <p>{{ ticket.descripcion }}</p>
+    </article>
+    <div class="hero-acciones">
+      <a class="boton boton-outline" href="{{ url_for('tickets') }}">Volver al listado</a>
+      <a class="boton boton-primario" href="{{ url_for('cotizacion') }}">Crear nuevo ticket</a>
+    </div>
+  </article>
+
+  <article class="seccion">
+    <div class="titulo-seccion"><h2>Chat del ticket</h2></div>
+    <div style="display:grid; gap:.7rem; margin-top:.6rem;">
+      {% for item in mensajes_chat %}
+        <article class="card {% if item.id_usuario == usuario_actual.id %}card-chat-propio{% endif %}">
+          <h3 style="font-size:.92rem;">{{ item.nombres }} · {{ item.rol|capitalize }} · {{ item.fecha }}</h3>
+          <p style="margin-top:.35rem; color:#2a2e30;">{{ item.mensaje }}</p>
+        </article>
+      {% else %}
+        <article class="card"><p>Aún no hay mensajes en este ticket.</p></article>
+      {% endfor %}
+    </div>
+
+    <form class="formulario" style="margin-top:1rem;" method="POST" action="{{ url_for('enviar_mensaje_ticket', id_ticket=ticket.id) }}">
+      <div class="campo">
+        <label>Nuevo mensaje</label>
+        <textarea name="mensaje" placeholder="Escribe aquí la actualización para el cliente o para soporte..." required></textarea>
+      </div>
+      <button type="submit" class="boton boton-primario">Enviar mensaje</button>
+    </form>
+  </article>
+{% endblock %}

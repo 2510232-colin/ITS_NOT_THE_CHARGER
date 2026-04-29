@@ -1,0 +1,24 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Registro de cliente{% endblock %}
+
+{% block contenido %}
+  <section class="seccion" style="max-width:700px; margin-inline:auto; margin-top:2rem;">
+    <h2>Registro de cliente</h2>
+    <form class="formulario" style="margin-top:1rem;" method="POST" action="{{ url_for('registro') }}">
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Nombre</label><input type="text" name="nombre" required /></div>
+        <div class="campo"><label>Apellidos</label><input type="text" name="apellidos" required /></div>
+      </div>
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Correo</label><input type="email" name="correo" required /></div>
+        <div class="campo"><label>Teléfono</label><input type="text" name="telefono" required /></div>
+      </div>
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Contraseña</label><input type="password" name="contrasena" required /></div>
+        <div class="campo"><label>Confirmar contraseña</label><input type="password" name="confirmar_contrasena" required /></div>
+      </div>
+      <button type="submit" class="boton boton-primario">Crear cuenta</button>
+    </form>
+  </section>
+{% endblock %}

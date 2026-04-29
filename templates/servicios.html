@@ -1,0 +1,76 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Servicios{% endblock %}
+
+{% block contenido %}
+  <section class="hero">
+    <small>Catálogo de servicios</small>
+    <h1>Explora primero por categoría</h1>
+    <p>Selecciona una categoría para entrar a su página y ver todos los servicios disponibles.</p>
+  </section>
+
+  <section class="seccion">
+    <form method="GET" action="{{ url_for('servicios') }}" class="formulario">
+      <div class="campo">
+        <label>Cuéntanos qué problema tienes (diagnóstico guiado)</label>
+        <input type="text" name="q" value="{{ busqueda }}" maxlength="140" placeholder="Ejemplo: computadora lenta, no enciende, sobrecalienta" />
+      </div>
+      <div class="hero-acciones" style="margin-top:.3rem;">
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='computadora lenta') }}">Computadora lenta</a>
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='no enciende') }}">No enciende</a>
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='se sobrecalienta') }}">Sobrecalentamiento</a>
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='quiero actualizar ram ssd') }}">Actualizar RAM/SSD</a>
+      </div>
+      <div class="hero-acciones">
+        <button type="submit" class="boton boton-primario">Obtener recomendaciones</button>
+        {% if busqueda %}
+          <a class="boton boton-outline" href="{{ url_for('servicios') }}">Limpiar búsqueda</a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+
+  {% if busqueda %}
+    <section class="seccion">
+      <div class="titulo-seccion"><h2>Recomendaciones por palabra clave</h2></div>
+      {% if recomendaciones %}
+        <div class="rejilla rejilla-2">
+          {% for servicio in recomendaciones %}
+            <article class="card">
+              <h3>{{ servicio.titulo }}</h3>
+              <span class="badge">{{ servicio.categoria }}</span>
+              <p>{{ servicio.descripcion }}</p>
+              <div class="precio">{{ servicio.precio_mostrar }}</div>
+              <a class="boton boton-outline" href="{{ url_for('servicio_detalle', id=servicio.id) }}">Ver detalle</a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <article class="card">
+          <h3>Sin recomendaciones directas</h3>
+          <p>Prueba con palabras más específicas como “sobrecalienta”, “pantalla azul” o “mantenimiento”.</p>
+        </article>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <section class="seccion">
+    <div class="titulo-seccion"><h2>Categorías de servicios</h2></div>
+    {% if categorias %}
+      <div class="rejilla rejilla-3">
+        {% for categoria in categorias %}
+          <article class="card">
+            <h3>{{ categoria.categoria }}</h3>
+            <p>Servicios registrados: {{ categoria.total }}</p>
+            <a class="boton boton-outline" href="{{ url_for('servicios_por_categoria', slug=categoria.slug) }}">Entrar a categoría</a>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <article class="card">
+        <h3>Sin categorías registradas</h3>
+        <p>No hay servicios activos para mostrar en este momento.</p>
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}

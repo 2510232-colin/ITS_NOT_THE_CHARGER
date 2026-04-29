@@ -1,0 +1,55 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'contactos' %}
+
+{% block titulo %}TechCare | Mensajes de contacto{% endblock %}
+
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <h2>Chats internos por ticket</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Folio</th><th>Cliente</th><th>Estado</th><th>Mensajes</th><th>Última interacción</th><th>Abrir</th></tr>
+      {% for chat in chats %}
+        <tr>
+          <td>{{ chat.folio }}</td>
+          <td>{{ chat.cliente }}</td>
+          <td><span class="estado {{ 'proceso' if chat.estado in ['En proceso', 'En revisión'] else 'listo' }}">{{ chat.estado }}</span></td>
+          <td>{{ chat.total_mensajes }}</td>
+          <td>{{ chat.ultima_interaccion or 'Sin mensajes' }}</td>
+          <td><a class="boton boton-outline" href="{{ url_for('ticket_detalle', id_ticket=chat.id_ticket) }}">Ver chat</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay tickets con chat para mostrar.</td></tr>
+      {% endfor %}
+    </table>
+  </article>
+
+  <article class="seccion">
+    <h2>Mensajes web (formulario contacto)</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Mensaje</th><th>Estado</th><th>Acción</th></tr>
+      {% for item in mensajes %}
+        <tr>
+          <td>{{ item.fecha }}</td>
+          <td>{{ item.nombre }}</td>
+          <td>{{ item.correo }}</td>
+          <td style="max-width:360px;">{{ item.mensaje }}</td>
+          <td>{% if item.atendido %}<span class="badge">Atendido</span>{% else %}<span class="estado revision">Pendiente</span>{% endif %}</td>
+          <td>
+            <form method="POST" action="{{ url_for('panel_contactos') }}" class="acciones-tabla-inline">
+              <input type="hidden" name="id_contacto" value="{{ item.id }}" />
+              <input type="hidden" name="atendido" value="{{ 0 if item.atendido else 1 }}" />
+              <button type="submit" class="boton boton-outline">{{ 'Marcar pendiente' if item.atendido else 'Marcar atendido' }}</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay mensajes de contacto registrados.</td></tr>
+      {% endfor %}
+    </table>
+  </article>
+{% endblock %}

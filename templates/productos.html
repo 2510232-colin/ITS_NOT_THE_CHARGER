@@ -1,0 +1,33 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Productos{% endblock %}
+
+{% block contenido %}
+  <section class="hero">
+    <small>Catálogo de componentes</small>
+    <h1>Compra hardware con opción de instalación en servicio técnico</h1>
+    <p>La tienda es complementaria: puedes mezclar productos con servicios para una experiencia más organizada.</p>
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion"><h2>Componentes recomendados</h2></div>
+    {% if productos %}
+      <div class="rejilla rejilla-3">
+        {% for producto in productos %}
+          <article class="card">
+            <div class="imagen-producto"></div>
+            <h3>{{ producto.titulo }}</h3>
+            <p>{{ producto.descripcion }}</p>
+            <div class="precio">${{ "%.2f"|format(producto.precio) }} MXN</div>
+            <a class="boton boton-outline" href="{{ url_for('producto_detalle') }}">Ver detalle</a>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <article class="card">
+        <h3>Sin productos registrados</h3>
+        <p>Los componentes se cargarán más adelante desde el panel administrativo.</p>
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% if usuario_actual.rol == 'administrador' %}
+  <a class="{% if panel_activo == 'admin_panel' %}activo{% endif %}" href="{{ url_for('admin_dashboard') }}">Panel</a>
+  <a class="{% if panel_activo == 'tickets' %}activo{% endif %}" href="{{ url_for('tickets') }}">Tickets</a>
+  <a class="{% if panel_activo == 'mensajes' %}activo{% endif %}" href="{{ url_for('panel_mensajes') }}">Chats</a>
+  <a class="{% if panel_activo == 'contactos' %}activo{% endif %}" href="{{ url_for('panel_contactos') }}">Bandeja contacto</a>
+  <a class="{% if panel_activo == 'pedidos' %}activo{% endif %}" href="{{ url_for('admin_pedidos') }}">Pedidos</a>
+  <a class="{% if panel_activo == 'productos' %}activo{% endif %}" href="{{ url_for('admin_productos') }}">Productos</a>
+  <a class="{% if panel_activo == 'servicios' %}activo{% endif %}" href="{{ url_for('admin_servicios') }}">Servicios</a>
+  <a class="{% if panel_activo == 'usuarios' %}activo{% endif %}" href="{{ url_for('admin_usuarios') }}">Usuarios</a>
+  <a class="{% if panel_activo == 'contenido' %}activo{% endif %}" href="{{ url_for('admin_contenido') }}">Contenido</a>
+{% elif usuario_actual.rol == 'tecnico' %}
+  <a class="{% if panel_activo == 'tecnico_panel' %}activo{% endif %}" href="{{ url_for('tecnico_dashboard') }}">Panel</a>
+  <a class="{% if panel_activo == 'tickets' %}activo{% endif %}" href="{{ url_for('tickets') }}">Tickets</a>
+  <a class="{% if panel_activo == 'mensajes' %}activo{% endif %}" href="{{ url_for('panel_mensajes') }}">Chats</a>
+  <a class="{% if panel_activo == 'contactos' %}activo{% endif %}" href="{{ url_for('panel_contactos') }}">Bandeja contacto</a>
+  <a href="{{ url_for('servicios') }}">Servicios</a>
+  <a href="{{ url_for('productos') }}">Productos</a>
+{% else %}
+  <a class="{% if panel_activo == 'cliente_panel' %}activo{% endif %}" href="{{ url_for('cliente_dashboard') }}">Panel</a>
+  <a class="{% if panel_activo == 'tickets' %}activo{% endif %}" href="{{ url_for('tickets') }}">Tickets</a>
+  <a class="{% if panel_activo == 'mensajes' %}activo{% endif %}" href="{{ url_for('panel_mensajes') }}">Mensajes</a>
+  <a class="{% if panel_activo == 'pedidos_cliente' %}activo{% endif %}" href="{{ url_for('cliente_pedidos') }}">Mis pedidos</a>
+  <a href="{{ url_for('cotizacion') }}">Nueva cotización</a>
+  <a href="{{ url_for('mi_cuenta') }}">Mi cuenta</a>
+{% endif %}

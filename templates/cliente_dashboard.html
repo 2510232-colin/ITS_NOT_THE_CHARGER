@@ -1,0 +1,34 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'cliente_panel' %}
+
+{% block titulo %}TechCare | Panel cliente{% endblock %}
+
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <h2>Bienvenido, cliente</h2>
+    <div class="rejilla rejilla-3" style="margin-top: .9rem;">
+      <article class="card"><h3>Tickets activos</h3><div class="precio">{{ total_tickets }}</div></article>
+      <article class="card"><h3>Pedidos registrados</h3><div class="precio">{{ total_pedidos }}</div></article>
+      <article class="card"><h3>Compras entregadas</h3><div class="precio">{{ compras_entregadas }}</div></article>
+    </div>
+  </article>
+
+  <article class="seccion">
+    <h2>Seguimiento rápido</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Folio</th><th>Servicio</th><th>Estado</th></tr>
+      {% for ticket in tickets[:2] %}
+        <tr>
+          <td>{{ ticket.folio }}</td>
+          <td>{{ ticket.servicio }}</td>
+          <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
+        </tr>
+      {% endfor %}
+    </table>
+  </article>
+{% endblock %}

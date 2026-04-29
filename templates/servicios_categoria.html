@@ -1,0 +1,61 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | {{ categoria_activa_nombre }}{% endblock %}
+
+{% block contenido %}
+  <section class="hero">
+    <small>Categoría</small>
+    <h1>{{ categoria_activa_nombre }}</h1>
+    <p>Visualiza todos los servicios de esta categoría y elige el que mejor se ajuste a tu necesidad.</p>
+    <div class="hero-acciones">
+      <a class="boton boton-secundario" href="{{ url_for('servicios') }}">Volver a categorías</a>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion"><h2>Cambiar de categoría</h2></div>
+    <div class="hero-acciones">
+      {% for categoria in categorias %}
+        <a class="boton {% if categoria.slug == categoria_activa_slug %}boton-primario{% else %}boton-outline{% endif %}" href="{{ url_for('servicios_por_categoria', slug=categoria.slug) }}">{{ categoria.categoria }}</a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="seccion">
+    <form method="GET" action="{{ url_for('servicios_por_categoria', slug=categoria_activa_slug) }}" class="formulario">
+      <div class="campo">
+        <label>Buscar dentro de {{ categoria_activa_nombre }}</label>
+        <input type="text" name="q" value="{{ busqueda }}" maxlength="140" placeholder="Ejemplo: limpieza, cambio térmico, optimización" />
+      </div>
+      <div class="hero-acciones">
+        <button type="submit" class="boton boton-primario">Buscar en categoría</button>
+        {% if busqueda %}
+          <a class="boton boton-outline" href="{{ url_for('servicios_por_categoria', slug=categoria_activa_slug) }}">Limpiar</a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion"><h2>Servicios de {{ categoria_activa_nombre }}</h2></div>
+    {% if servicios %}
+      <div class="rejilla rejilla-3">
+        {% for servicio in servicios %}
+          <article class="card">
+            <h3>{{ servicio.titulo }}</h3>
+            <span class="badge">{{ servicio.categoria }}</span>
+            <p>{{ servicio.descripcion }}</p>
+            <div class="precio">{{ servicio.precio_mostrar }}</div>
+            <p style="margin-top:.35rem; color:#6a6f75; font-size:.88rem;">Modalidad: {{ servicio.modalidad }} · Tiempo: {{ servicio.tiempo_estimado or 'Por definir' }}</p>
+            <a class="boton boton-outline" href="{{ url_for('servicio_detalle', id=servicio.id) }}">Ver detalle</a>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <article class="card">
+        <h3>Sin resultados en esta categoría</h3>
+        <p>No se encontraron servicios con esa búsqueda dentro de {{ categoria_activa_nombre }}.</p>
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}

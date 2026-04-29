@@ -1,0 +1,33 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Cotización y ticket{% endblock %}
+
+{% block contenido %}
+  <section class="seccion">
+    <div class="titulo-seccion"><h2>Solicitud de cotización (ticket)</h2></div>
+    <p>Al enviar se genera un folio real en base de datos para seguimiento y se guarda un precio estimado referencial para trazabilidad.</p>
+    <form class="formulario" style="margin-top:1rem;" method="POST" action="{{ url_for('cotizacion') }}">
+      <div class="rejilla rejilla-2">
+        <div class="campo">
+          <label>Servicio requerido</label>
+          <input type="text" name="servicio_requerido" placeholder="Ejemplo: Diagnóstico general" required />
+        </div>
+        <div class="campo"><label>Equipo</label><input type="text" name="equipo" placeholder="Laptop, PC, etc." required /></div>
+      </div>
+      <div class="campo"><label>Descripción del problema</label><textarea name="descripcion_problema" required></textarea></div>
+      <article class="card">
+        <h3>Política de servicio a domicilio</h3>
+        <ul style="margin-top:.45rem; padding-left:1rem; list-style:disc; color: var(--color-texto-suave);">
+          {% for regla in politica_domicilio %}
+            <li>{{ regla }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+      <label style="display:flex; align-items:flex-start; gap:.55rem;">
+        <input type="checkbox" name="acepta_politica_domicilio" required style="margin-top:.2rem;" />
+        <span>Acepto la política de servicio a domicilio y entiendo que el precio mostrado es referencial.</span>
+      </label>
+      <button type="submit" class="boton boton-primario">Generar ticket</button>
+    </form>
+  </section>
+{% endblock %}

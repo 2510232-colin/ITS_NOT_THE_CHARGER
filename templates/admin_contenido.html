@@ -1,0 +1,30 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'contenido' %}
+
+{% block titulo %}TechCare | Admin contenido{% endblock %}
+
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <h2>Contenido general del sitio</h2>
+    <form method="POST" action="{{ url_for('admin_contenido') }}" class="formulario" style="margin-top:.8rem;">
+      <div class="campo"><label>Título principal</label><input type="text" name="titulo_hero" value="{{ contenido.titulo_hero }}" required /></div>
+      <div class="campo"><label>Subtítulo principal</label><textarea name="subtitulo_hero" required>{{ contenido.subtitulo_hero }}</textarea></div>
+      <div class="campo"><label>Mensaje promocional</label><textarea name="mensaje_promocional" required>{{ contenido.mensaje_promocional }}</textarea></div>
+      <button class="boton boton-primario" type="submit">Guardar contenido</button>
+    </form>
+  </article>
+
+  <article class="seccion">
+    <h2>Vista rápida</h2>
+    <article class="card">
+      <h3>{{ contenido.titulo_hero }}</h3>
+      <p>{{ contenido.subtitulo_hero }}</p>
+      <span class="badge">{{ contenido.mensaje_promocional }}</span>
+    </article>
+  </article>
+{% endblock %}

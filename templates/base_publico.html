@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block titulo %}TechCare{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="contenedor navbar-contenido">
+      <a class="logo" href="{{ url_for('inicio') }}">
+        <span class="logo-punto"></span>
+        <span>{{ negocio.nombre }} <small>{{ negocio.ciudad }}</small></span>
+      </a>
+      <button id="boton-menu-movil" class="boton boton-menu-movil">Menú</button>
+      <nav id="menu-principal" class="menu-principal">
+        <a class="enlace-menu {% if seccion_activa == 'inicio' %}activo{% endif %}" href="{{ url_for('inicio') }}">Inicio</a>
+        <a class="enlace-menu {% if seccion_activa == 'servicios' %}activo{% endif %}" href="{{ url_for('servicios') }}">Servicios</a>
+        <a class="enlace-menu {% if seccion_activa == 'productos' %}activo{% endif %}" href="{{ url_for('productos') }}">Productos</a>
+        <a class="enlace-menu {% if seccion_activa == 'nosotros' %}activo{% endif %}" href="{{ url_for('nosotros') }}">Nosotros</a>
+        <a class="enlace-menu {% if seccion_activa == 'contacto' %}activo{% endif %}" href="{{ url_for('contacto') }}">Contacto</a>
+      </nav>
+      <div class="acciones-nav">
+        {% if usuario_actual.id %}
+          <a class="boton boton-secundario" href="{{ url_for('mi_cuenta') }}">Mi cuenta</a>
+          <a class="boton boton-primario" href="{{ url_for('logout') }}">Salir</a>
+        {% else %}
+          <a class="boton boton-secundario" href="{{ url_for('login') }}">Ingresar</a>
+          <a class="boton boton-primario" href="{{ url_for('cotizacion') }}">Cotizar</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+      {% if mensajes %}
+        <section class="seccion" style="margin-top: 1rem;">
+          {% for categoria, mensaje in mensajes %}
+            <div class="alerta alerta-{{ categoria }}">{{ mensaje }}</div>
+          {% endfor %}
+        </section>
+      {% endif %}
+    {% endwith %}
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor">
+      <strong>{{ negocio.nombre }} · {{ negocio.ciudad }}</strong>
+      <p>Plataforma de servicios tecnológicos con atención organizada y seguimiento de tickets en línea.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/interacciones.js') }}"></script>
+</body>
+</html>

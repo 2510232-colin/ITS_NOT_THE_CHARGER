@@ -1,0 +1,27 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'pedidos_cliente' %}
+
+{% block titulo %}TechCare | Mis pedidos{% endblock %}
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <h2>Mis pedidos</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Folio</th><th>Total</th><th>Estado</th><th>Fecha</th></tr>
+      {% for pedido in pedidos %}
+        <tr>
+          <td>{{ pedido.folio }}</td>
+          <td>${{ '%.2f'|format(pedido.total) }}</td>
+          <td><span class="badge">{{ pedido.estado }}</span></td>
+          <td>{{ pedido.fecha }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4">Aún no tienes pedidos registrados.</td></tr>
+      {% endfor %}
+    </table>
+  </article>
+{% endblock %}

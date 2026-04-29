@@ -1,0 +1,95 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'usuarios' %}
+
+{% block titulo %}TechCare | Admin usuarios{% endblock %}
+
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <h2>Agregar usuario</h2>
+    <form method="POST" action="{{ url_for('admin_usuarios') }}" class="formulario" style="margin-top:.8rem;">
+      <input type="hidden" name="accion" value="crear" />
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Correo</label><input type="email" name="correo" required /></div>
+        <div class="campo"><label>Teléfono</label><input type="text" name="numero" maxlength="10" required /></div>
+      </div>
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Contraseña inicial</label><input type="password" name="contrasena" required /></div>
+        <div class="campo"><label>Rol</label>
+          <select name="rol" required>
+            <option value="cliente">Cliente</option>
+            <option value="tecnico">Técnico</option>
+            <option value="administrador">Administrador</option>
+          </select>
+        </div>
+      </div>
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Nombres</label><input type="text" name="nombres" required /></div>
+        <div class="campo"><label>Apellidos</label><input type="text" name="apellidos" required /></div>
+      </div>
+      <button class="boton boton-primario" type="submit">Agregar usuario</button>
+    </form>
+  </article>
+
+  <article class="seccion">
+    <h2>Usuarios y roles</h2>
+    <form method="GET" action="{{ url_for('admin_usuarios') }}" class="formulario" style="margin-top:.6rem; margin-bottom:.7rem;">
+      <div class="rejilla rejilla-2">
+        <div class="campo"><label>Buscar</label><input type="text" name="q" value="{{ filtro_q }}" placeholder="Correo, nombre o teléfono" /></div>
+        <div class="campo">
+          <label>Rol</label>
+          <select name="rol">
+            <option value="">Todos</option>
+            <option value="administrador" {% if filtro_rol == 'administrador' %}selected{% endif %}>Administrador</option>
+            <option value="tecnico" {% if filtro_rol == 'tecnico' %}selected{% endif %}>Técnico</option>
+            <option value="cliente" {% if filtro_rol == 'cliente' %}selected{% endif %}>Cliente</option>
+          </select>
+        </div>
+      </div>
+      <div class="hero-acciones">
+        <button type="submit" class="boton boton-primario">Buscar usuarios</button>
+        <a class="boton boton-outline" href="{{ url_for('admin_usuarios') }}">Limpiar</a>
+      </div>
+    </form>
+
+    <table class="tabla tabla-usuarios" style="margin-top:.8rem;">
+      <tr><th>Correo</th><th>Nombre</th><th>Teléfono</th><th>Rol</th><th>Estatus</th><th>Cambios</th></tr>
+      {% for usuario in usuarios %}
+        <tr>
+          <td>{{ usuario.correo }}</td>
+          <td>{{ usuario.nombres }} {{ usuario.apellidos }}</td>
+          <td>{{ usuario.numero }}</td>
+          <td><span class="badge">{{ usuario.rol }}</span></td>
+          <td>{{ 'Activo' if usuario.activo else 'Inactivo' }}</td>
+          <td>
+            <div class="acciones-usuario">
+              <form method="POST" action="{{ url_for('admin_usuarios') }}" class="acciones-usuario-form">
+                <input type="hidden" name="accion" value="cambiar_rol" />
+                <input type="hidden" name="id_usuario" value="{{ usuario.id }}" />
+                <select name="nuevo_rol" style="padding:.35rem; border:1px solid #cfd4da; border-radius:8px;">
+                  <option value="cliente" {% if usuario.rol == 'cliente' %}selected{% endif %}>Cliente</option>
+                  <option value="tecnico" {% if usuario.rol in ['tecnico', 'gestor'] %}selected{% endif %}>Técnico</option>
+                  <option value="administrador" {% if usuario.rol == 'administrador' %}selected{% endif %}>Administrador</option>
+                </select>
+                <button class="boton boton-outline" type="submit">Guardar</button>
+              </form>
+              {% if usuario.id != usuario_actual.id %}
+                <form method="POST" action="{{ url_for('admin_usuarios') }}">
+                  <input type="hidden" name="accion" value="eliminar" />
+                  <input type="hidden" name="id_usuario" value="{{ usuario.id }}" />
+                  <button class="boton boton-outline" type="submit">Eliminar</button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay usuarios registrados.</td></tr>
+      {% endfor %}
+    </table>
+  </article>
+{% endblock %}

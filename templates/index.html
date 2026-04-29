@@ -1,0 +1,85 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Inicio{% endblock %}
+
+{% block contenido %}
+  <section class="hero">
+    <small>{{ negocio.descripcion_corta }}</small>
+    <h1>{{ contenido_inicio.titulo_hero }}</h1>
+    <p>{{ contenido_inicio.subtitulo_hero }}</p>
+    <div class="hero-acciones">
+      <a class="boton boton-primario" href="{{ url_for('cotizacion') }}">Solicitar diagnóstico</a>
+      <a class="boton boton-secundario" href="{{ url_for('servicios') }}">Ver servicios</a>
+      <a class="boton boton-outline" href="{{ url_for('productos') }}">Explorar componentes</a>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion">
+      <h2>¿Qué necesitas resolver hoy?</h2>
+      <a href="{{ url_for('servicios') }}" class="boton boton-outline">Ver diagnóstico guiado</a>
+    </div>
+    <div class="hero-acciones">
+      <a class="boton boton-outline" href="{{ url_for('servicios', q='computadora lenta') }}">Computadora lenta</a>
+      <a class="boton boton-outline" href="{{ url_for('servicios', q='no enciende') }}">No enciende</a>
+      <a class="boton boton-outline" href="{{ url_for('servicios', q='se sobrecalienta') }}">Se sobrecalienta</a>
+      <a class="boton boton-outline" href="{{ url_for('servicios', q='quiero mejorar rendimiento') }}">Mejorar rendimiento</a>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion">
+      <h2>Información importante</h2>
+      <a href="{{ url_for('productos') }}" class="boton boton-outline">Ver catálogo</a>
+    </div>
+    <article class="card">
+      <h3>Mensaje promocional</h3>
+      <p>{{ contenido_inicio.mensaje_promocional }}</p>
+      <span class="badge">Actualizable desde panel</span>
+    </article>
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion">
+      <h2>Promociones activas</h2>
+    </div>
+    {% if promociones %}
+      <div class="rejilla rejilla-2">
+        {% for promocion in promociones %}
+          <article class="card">
+            <h3>{{ promocion.titulo }}</h3>
+            <p>{{ promocion.promocion_texto }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <article class="card">
+        <h3>Sin promociones activas</h3>
+        <p>Las promociones se configuran desde administración de servicios.</p>
+      </article>
+    {% endif %}
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion">
+      <h2>Servicios destacados</h2>
+      <a href="{{ url_for('servicios') }}" class="boton boton-outline">Explorar categorías</a>
+    </div>
+    {% if servicios %}
+      <div class="rejilla rejilla-3">
+        {% for servicio in servicios %}
+          <article class="card">
+            <h3>{{ servicio.titulo }}</h3>
+            <p>{{ servicio.descripcion }}</p>
+            <div class="precio">{{ servicio.precio_mostrar }}</div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <article class="card">
+        <h3>Sin servicios cargados</h3>
+        <p>Por ahora no hay servicios registrados en la base de datos.</p>
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}

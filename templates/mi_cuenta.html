@@ -1,0 +1,53 @@
+{% extends "base_publico.html" %}
+
+{% block titulo %}TechCare | Mi cuenta{% endblock %}
+
+{% block contenido %}
+  <section class="hero">
+    <small>Cuenta</small>
+    <h1>Hola, {{ usuario_actual.nombres }}</h1>
+    <p>Desde aquí puedes entrar a tu panel y navegar rápido a tus módulos principales.</p>
+  </section>
+
+  <section class="seccion">
+    <div class="titulo-seccion"><h2>Accesos rápidos</h2></div>
+    <div class="rejilla rejilla-3">
+      {% if panel_url %}
+        <article class="card">
+          <h3>Mi panel</h3>
+          <p>Accede a tu panel según tu rol actual.</p>
+          <a class="boton boton-primario" href="{{ panel_url }}">Abrir panel</a>
+        </article>
+      {% endif %}
+      <article class="card">
+        <h3>Mis tickets</h3>
+        <p>Consulta el estado y trazabilidad de tus tickets.</p>
+        <a class="boton boton-outline" href="{{ url_for('tickets') }}">Ir a tickets</a>
+      </article>
+      {% if usuario_actual.rol == 'cliente' %}
+        <article class="card">
+          <h3>Mis pedidos</h3>
+          <p>Visualiza tus pedidos y su estado actual.</p>
+          <a class="boton boton-outline" href="{{ url_for('cliente_pedidos') }}">Ir a pedidos</a>
+        </article>
+      {% endif %}
+      {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+        <article class="card">
+          <h3>Mensajes de contacto</h3>
+          <p>Revisa dudas enviadas por clientes y márcalas como atendidas.</p>
+          <a class="boton boton-outline" href="{{ url_for('panel_contactos') }}">Abrir bandeja</a>
+        </article>
+      {% endif %}
+      <article class="card">
+        <h3>Ver sitio público</h3>
+        <p>Regresa a inicio, servicios y productos como visitante autenticado.</p>
+        <a class="boton boton-outline" href="{{ url_for('inicio') }}">Ir al sitio</a>
+      </article>
+      <article class="card">
+        <h3>Cerrar sesión</h3>
+        <p>Finaliza tu sesión de forma segura.</p>
+        <a class="boton boton-outline" href="{{ url_for('logout') }}">Salir</a>
+      </article>
+    </div>
+  </section>
+{% endblock %}
