@@ -4,14 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block titulo %}TechCare{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-icono.png') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}" />
 </head>
 <body>
   <header class="navbar">
     <div class="contenedor navbar-contenido">
       <a class="logo" href="{{ url_for('inicio') }}">
-        <span class="logo-punto"></span>
-        <span>{{ negocio.nombre }} <small>{{ negocio.ciudad }}</small></span>
+        <img class="logo-icono" src="{{ url_for('static', filename='img/logo-icono.png') }}" alt="Logo {{ negocio.nombre }}" />
+        <span class="logo-texto">
+          <strong class="logo-nombre">IT<span class="logo-azul">'</span>S <span class="logo-azul">NOT</span> THE CHARGER</strong>
+          <small class="logo-ciudad">{{ negocio.ciudad }}</small>
+        </span>
       </a>
       <button id="boton-menu-movil" class="boton boton-menu-movil">Menú</button>
       <nav id="menu-principal" class="menu-principal">

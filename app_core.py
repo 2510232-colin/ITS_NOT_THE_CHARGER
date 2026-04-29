@@ -7,7 +7,7 @@ from db import ejecutar_consulta
 
 
 NEGOCIO = {
-    "nombre": "PcCure",
+    "nombre": "IT'S NOT THE CHARGER",
     "ciudad": "Querétaro, Querétaro",
     "descripcion_corta": "Servicio técnico premium y tienda tecnológica",
 }

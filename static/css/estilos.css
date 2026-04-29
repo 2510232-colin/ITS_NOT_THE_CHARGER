@@ -60,17 +60,47 @@ ul {
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.4px;
+  gap: 0.72rem;
+  min-width: 0;
 }
 
-.logo-punto {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #66b2ff, #2b8eff 55%, #1f78e6);
-  box-shadow: 0 0 14px rgba(43, 142, 255, 0.55);
+.logo-icono {
+  width: auto;
+  height: 72px;
+  max-height: 72px;
+  display: block;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.logo-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.08;
+}
+
+.logo-nombre {
+  font-family: "Arial Black", "Segoe UI", Tahoma, sans-serif;
+  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  color: #f5f8ff;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.logo-azul {
+  color: var(--color-primario);
+}
+
+.logo-ciudad {
+  margin-top: 0.12rem;
+  color: #a9d2ff;
+  font-size: 0.74rem;
+  letter-spacing: 0.45px;
+  white-space: nowrap;
 }
 
 .menu-principal {
@@ -494,6 +524,21 @@ ul {
 }
 
 @media (max-width: 960px) {
+  .logo-icono {
+    width: auto;
+    height: 56px;
+    max-height: 56px;
+  }
+
+  .logo-nombre {
+    font-size: 0.88rem;
+    letter-spacing: 0.55px;
+  }
+
+  .logo-ciudad {
+    display: none;
+  }
+
   .menu-principal {
     position: fixed;
     inset: 74px 0 auto 0;
