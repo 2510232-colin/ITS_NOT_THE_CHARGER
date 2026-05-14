@@ -72,7 +72,7 @@ def registrar_rutas_panel(app):
             total_tickets=len(tickets),
             total_pedidos=total_pedidos,
             compras_entregadas=compras_entregadas,
-            titulo_panel="TechCare Cliente",
+            titulo_panel="INTC Cliente",
         )
 
     @app.route("/panel/mis-pedidos")
@@ -99,7 +99,7 @@ def registrar_rutas_panel(app):
         return render_template(
             "cliente_pedidos.html",
             pedidos=pedidos,
-            titulo_panel="TechCare Cliente",
+            titulo_panel="INTC Cliente",
         )
 
     @app.route("/panel/admin")
@@ -125,7 +125,7 @@ def registrar_rutas_panel(app):
             total_servicios=total_servicios,
             total_usuarios=total_usuarios,
             total_pedidos=total_pedidos,
-            titulo_panel="TechCare Admin",
+            titulo_panel="INTC Admin",
         )
 
     @app.route("/panel/admin/productos", methods=["GET", "POST"])
@@ -226,7 +226,7 @@ def registrar_rutas_panel(app):
 
         return render_template(
             "admin_productos.html",
-            titulo_panel="TechCare Admin",
+            titulo_panel="INTC Admin",
             productos=productos,
             producto_edicion=producto_edicion,
         )
@@ -396,7 +396,7 @@ def registrar_rutas_panel(app):
 
         return render_template(
             "admin_servicios.html",
-            titulo_panel="TechCare Admin",
+            titulo_panel="INTC Admin",
             servicios=servicios,
             servicio_edicion=servicio_edicion,
             filtro_q=filtro_q,
@@ -454,7 +454,7 @@ def registrar_rutas_panel(app):
 
         return render_template(
             "admin_pedidos.html",
-            titulo_panel="TechCare Admin",
+            titulo_panel="INTC Admin",
             pedidos=pedidos,
             estados_pedido=ESTADOS_PEDIDO,
         )
@@ -496,7 +496,7 @@ def registrar_rutas_panel(app):
 
         return render_template(
             "admin_contenido.html",
-            titulo_panel="TechCare Admin",
+            titulo_panel="INTC Admin",
             contenido=contenido,
         )
 
@@ -634,7 +634,7 @@ def registrar_rutas_panel(app):
 
         return render_template(
             "admin_usuarios.html",
-            titulo_panel="TechCare Admin",
+            titulo_panel="INTC Admin",
             usuarios=usuarios,
             filtro_q=filtro_q,
             filtro_rol=filtro_rol,
@@ -656,7 +656,7 @@ def registrar_rutas_panel(app):
             total_tickets=len(tickets),
             tickets_en_proceso=en_proceso,
             tickets_listos=listos,
-            titulo_panel="TechCare Técnico",
+            titulo_panel="INTC Técnico",
         )
 
     @app.route("/panel/gestor")
@@ -673,7 +673,7 @@ def registrar_rutas_panel(app):
             "tickets.html",
             tickets=tickets,
             estados_ticket=ESTADOS_TICKET,
-            titulo_panel="TechCare Seguimiento",
+            titulo_panel="INTC Seguimiento",
         )
 
     @app.route("/panel/tickets/eliminar", methods=["POST"])
@@ -764,7 +764,7 @@ def registrar_rutas_panel(app):
             "panel_contactos.html",
             mensajes=mensajes,
             chats=chats,
-            titulo_panel="TechCare Contactos",
+            titulo_panel="INTC Contactos",
         )
 
     @app.route("/panel/mensajes")
@@ -811,7 +811,7 @@ def registrar_rutas_panel(app):
         return render_template(
             "panel_mensajes.html",
             chats=chats,
-            titulo_panel="TechCare Mensajes",
+            titulo_panel="INTC Mensajes",
         )
 
     @app.route("/panel/tickets/<int:id_ticket>")
@@ -839,7 +839,7 @@ def registrar_rutas_panel(app):
             "ticket_detalle.html",
             ticket=ticket,
             mensajes_chat=mensajes_chat,
-            titulo_panel="TechCare Seguimiento",
+            titulo_panel="INTC Seguimiento",
         )
 
     @app.route("/panel/tickets/<int:id_ticket>/mensaje", methods=["POST"])

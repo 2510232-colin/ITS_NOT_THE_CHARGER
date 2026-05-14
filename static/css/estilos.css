@@ -24,6 +24,13 @@ body {
   color: var(--color-oscuro);
   line-height: 1.55;
   font-size: 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
 }
 
 a {
@@ -521,6 +528,57 @@ ul {
   background: transparent;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 1180px) and (min-width: 961px) {
+  .navbar .contenedor {
+    width: min(1320px, 98%);
+  }
+
+  .navbar-contenido {
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    min-height: 66px;
+  }
+
+  .menu-principal {
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+  }
+
+  .acciones-nav {
+    margin-left: auto;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+  }
+
+  .enlace-menu {
+    padding: 0.42rem 0.55rem;
+    font-size: 0.8rem;
+  }
+
+  .acciones-nav .boton {
+    min-height: 34px;
+    padding: 0.42rem 0.58rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  .logo-icono {
+    height: 48px;
+    max-height: 48px;
+  }
+
+  .logo-nombre {
+    font-size: 0.78rem;
+    letter-spacing: 0.35px;
+  }
+
+  .logo-ciudad {
+    display: block;
+    font-size: 0.66rem;
+    letter-spacing: 0.25px;
+    margin-top: 0.06rem;
+  }
 }
 
 @media (max-width: 960px) {
