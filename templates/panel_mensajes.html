@@ -16,7 +16,11 @@
         <tr>
           <td>{{ chat.folio }}</td>
           <td>{{ chat.cliente }}</td>
-          <td><span class="estado {{ 'proceso' if chat.estado in ['En proceso', 'En revisión'] else 'listo' }}">{{ chat.estado }}</span></td>
+          <td>
+            <span class="estado {% if chat.estado in ['Pendiente', 'Validado', 'Agendado'] %}revision{% elif chat.estado in ['En diagnóstico', 'Esperando aprobación', 'En reparación'] %}proceso{% elif chat.estado == 'Cancelado' %}cancelado{% else %}listo{% endif %}">
+              {{ chat.estado }}
+            </span>
+          </td>
           <td>{{ chat.total_mensajes }}</td>
           <td>{{ chat.ultima_interaccion or 'Sin mensajes' }}</td>
           <td><a class="boton boton-outline" href="{{ url_for('ticket_detalle', id_ticket=chat.id_ticket) }}">Abrir chat</a></td>

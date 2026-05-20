@@ -47,6 +47,12 @@ ul {
   margin: 0 auto;
 }
 
+.navbar .contenedor {
+  width: min(1240px, 97%);
+  margin-left: max(8px, 0.9vw);
+  margin-right: auto;
+}
+
 .navbar {
   position: sticky;
   top: 0;
@@ -133,6 +139,10 @@ ul {
 .enlace-menu.activo {
   background: rgba(43, 142, 255, 0.18);
   color: #ffffff;
+}
+
+.enlace-menu-accion-movil {
+  display: none;
 }
 
 .acciones-nav {
@@ -303,6 +313,45 @@ ul {
   gap: 0.7rem;
 }
 
+.seccion-form-publica {
+  margin-top: 2rem;
+  margin-inline: auto;
+}
+
+.seccion-form-publica.compacta {
+  max-width: 560px;
+}
+
+.seccion-form-publica.media {
+  max-width: 700px;
+}
+
+.texto-suave {
+  color: var(--color-texto-suave);
+}
+
+.texto-form-ayuda {
+  margin-top: 0.3rem;
+}
+
+.texto-form-footer {
+  margin-top: 0.8rem;
+}
+
+.enlace-accion {
+  color: var(--color-primario);
+}
+
+.linea-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.linea-check input[type="checkbox"] {
+  margin-top: 0.2rem;
+}
+
 .campo {
   display: grid;
   gap: 0.35rem;
@@ -417,6 +466,7 @@ ul {
 .estado.revision { background: #fff4d4; color: #7c6500; }
 .estado.proceso { background: #e1efff; color: #0f57a8; }
 .estado.listo { background: #daf7e3; color: #1b6c35; }
+.estado.cancelado { background: #fdecec; color: #8a1f1f; }
 
 .card-chat-propio {
   border-color: #9ec8ff;
@@ -488,8 +538,37 @@ ul {
   font: inherit;
 }
 
+.control-tabla {
+  min-height: 34px;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.82rem;
+  max-width: 170px;
+}
+
+.columna-mensaje {
+  max-width: 360px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .tabla td .boton {
-  min-width: 110px;
+  min-width: 0;
+}
+
+.panel-contenido .tabla td .boton {
+  min-height: 34px;
+  padding: 0.42rem 0.62rem !important;
+  font-size: 0.82rem !important;
+}
+
+.panel-contenido .tabla .input-accion {
+  min-height: 34px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.82rem;
+  max-width: 150px;
 }
 
 .alerta {
@@ -582,6 +661,12 @@ ul {
 }
 
 @media (max-width: 960px) {
+  .navbar .contenedor {
+    width: min(1240px, 98%);
+    margin-left: 6px;
+    margin-right: auto;
+  }
+
   .logo-icono {
     width: auto;
     height: 56px;
@@ -610,6 +695,10 @@ ul {
 
   .menu-principal.abierto {
     display: flex;
+  }
+
+  .enlace-menu-accion-movil {
+    display: inline-flex;
   }
 
   .acciones-nav {
@@ -642,5 +731,34 @@ ul {
   .tabla-usuarios td {
     font-size: 0.83rem;
     padding: 0.5rem 0.32rem;
+  }
+
+  .tabla {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .tabla td .boton {
+    min-height: 32px;
+    padding: 0.36rem 0.55rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .acciones-tabla-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+  }
+
+  .acciones-tabla-inline .boton,
+  .acciones-tabla-inline .input-accion,
+  .acciones-tabla-inline .control-tabla {
+    width: 100%;
+    max-width: none;
+  }
+
+  .formulario .boton {
+    width: 100%;
   }
 }

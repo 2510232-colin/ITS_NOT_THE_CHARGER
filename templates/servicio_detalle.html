@@ -55,7 +55,7 @@
         <article class="card"><h3>Diagnóstico previo</h3><p>{{ 'Sí' if servicio.requiere_diagnostico else 'No' }}</p></article>
       </div>
       <div class="hero-acciones">
-        <a class="boton boton-primario" href="{{ url_for('cotizacion') }}">Cotizar este servicio</a>
+        <a class="boton boton-primario" href="{{ url_for('cotizacion', servicio=servicio.titulo) }}">Cotizar este servicio</a>
         <a class="boton boton-outline" href="{{ url_for('servicios') }}">Volver a catálogo</a>
       </div>
     </section>

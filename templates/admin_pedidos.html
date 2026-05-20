@@ -22,7 +22,7 @@
           <td>
             <form method="POST" action="{{ url_for('admin_pedidos') }}" style="display:flex; gap:.4rem;">
               <input type="hidden" name="id_pedido" value="{{ pedido.id }}" />
-              <select name="nuevo_estado" style="padding:.35rem; border:1px solid #cfd4da; border-radius:8px;">
+              <select name="nuevo_estado" class="control-tabla">
                 {% for estado in estados_pedido %}
                   <option value="{{ estado }}" {% if estado == pedido.estado %}selected{% endif %}>{{ estado }}</option>
                 {% endfor %}

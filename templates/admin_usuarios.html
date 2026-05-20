@@ -70,7 +70,7 @@
               <form method="POST" action="{{ url_for('admin_usuarios') }}" class="acciones-usuario-form">
                 <input type="hidden" name="accion" value="cambiar_rol" />
                 <input type="hidden" name="id_usuario" value="{{ usuario.id }}" />
-                <select name="nuevo_rol" style="padding:.35rem; border:1px solid #cfd4da; border-radius:8px;">
+                <select name="nuevo_rol" class="control-tabla">
                   <option value="cliente" {% if usuario.rol == 'cliente' %}selected{% endif %}>Cliente</option>
                   <option value="tecnico" {% if usuario.rol in ['tecnico', 'gestor'] %}selected{% endif %}>Técnico</option>
                   <option value="administrador" {% if usuario.rol == 'administrador' %}selected{% endif %}>Administrador</option>

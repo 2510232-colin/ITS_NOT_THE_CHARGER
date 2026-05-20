@@ -1,18 +1,31 @@
 {% extends "base_publico.html" %}
 
-{% block titulo %}INTC | Cotización y ticket{% endblock %}
+{% block titulo %}INTC | Solicitud de servicio{% endblock %}
 
 {% block contenido %}
   <section class="seccion">
-    <div class="titulo-seccion"><h2>Solicitud de cotización (ticket)</h2></div>
-    <p>Al enviar se genera un folio real en base de datos para seguimiento y se guarda un precio estimado referencial para trazabilidad.</p>
+    <div class="titulo-seccion"><h2>Nueva solicitud de servicio</h2></div>
+    <p>Al enviar se genera un folio de solicitud en estado <strong>Pendiente</strong> para darle seguimiento.</p>
     <form class="formulario" style="margin-top:1rem;" method="POST" action="{{ url_for('cotizacion') }}">
       <div class="rejilla rejilla-2">
         <div class="campo">
-          <label>Servicio requerido</label>
-          <input type="text" name="servicio_requerido" placeholder="Ejemplo: Diagnóstico general" required />
+          <label>Tipo de servicio</label>
+          <input type="text" name="servicio_requerido" value="{{ servicio_prefill or '' }}" placeholder="Ejemplo: Diagnóstico general" required />
         </div>
         <div class="campo"><label>Equipo</label><input type="text" name="equipo" placeholder="Laptop, PC, etc." required /></div>
+      </div>
+      <div class="rejilla rejilla-2">
+        <div class="campo">
+          <label>Modalidad de atención</label>
+          <select name="modalidad_atencion" required>
+            <option value="sucursal">Entrega en sucursal</option>
+            <option value="domicilio">Servicio a domicilio</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label>Notas adicionales (opcional)</label>
+          <input type="text" name="notas_adicionales" maxlength="200" placeholder="Referencia, horario, detalles extra" />
+        </div>
       </div>
       <div class="campo"><label>Descripción del problema</label><textarea name="descripcion_problema" required></textarea></div>
       <article class="card">
@@ -23,11 +36,11 @@
           {% endfor %}
         </ul>
       </article>
-      <label style="display:flex; align-items:flex-start; gap:.55rem;">
-        <input type="checkbox" name="acepta_politica_domicilio" required style="margin-top:.2rem;" />
-        <span>Acepto la política de servicio a domicilio y entiendo que el precio mostrado es referencial.</span>
+      <label class="linea-check">
+        <input type="checkbox" name="acepta_politica_domicilio" />
+        <span>Si selecciono servicio a domicilio, acepto la política y entiendo que el precio mostrado es referencial.</span>
       </label>
-      <button type="submit" class="boton boton-primario">Generar ticket</button>
+      <button type="submit" class="boton boton-primario">Crear solicitud</button>
     </form>
   </section>
 {% endblock %}

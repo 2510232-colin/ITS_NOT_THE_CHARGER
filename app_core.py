@@ -13,12 +13,50 @@ NEGOCIO = {
 }
 
 ESTADOS_TICKET = [
-    "Recibido",
-    "En revisión",
-    "En proceso",
-    "Listo para recoger",
+    "Pendiente",
+    "Validado",
+    "Agendado",
+    "En diagnóstico",
+    "Esperando aprobación",
+    "En reparación",
+    "Finalizado",
+    "Entregado",
+    "Cancelado",
+]
+
+ESTADOS_SOLICITUD = [
+    "Pendiente",
+    "Validado",
+    "Agendado",
+    "Cancelado",
+]
+
+ESTADOS_ORDEN_ACTIVA = [
+    "En diagnóstico",
+    "Esperando aprobación",
+    "En reparación",
+]
+
+ESTADOS_ORDEN_CERRADA = [
+    "Finalizado",
     "Entregado",
 ]
+
+TRANSICIONES_SOLICITUD = {
+    "Pendiente": {"Validado", "Agendado", "Cancelado"},
+    "Validado": {"Agendado", "Cancelado"},
+    "Agendado": {"Validado", "Cancelado"},
+    "Cancelado": set(),
+}
+
+TRANSICIONES_ORDEN = {
+    "En diagnóstico": {"Esperando aprobación", "En reparación", "Cancelado"},
+    "Esperando aprobación": {"En reparación", "Cancelado"},
+    "En reparación": {"Finalizado", "Cancelado"},
+    "Finalizado": {"Entregado"},
+    "Entregado": set(),
+    "Cancelado": set(),
+}
 
 ESTADOS_PEDIDO = ["Pendiente", "En preparación", "Listo para recoger", "Entregado"]
 
@@ -45,13 +83,33 @@ MAPA_INTENCIONES = {
 
 def estado_a_clase(estado):
     mapa = {
-        "Recibido": "revision",
-        "En revisión": "revision",
-        "En proceso": "proceso",
-        "Listo para recoger": "listo",
+        "Pendiente": "revision",
+        "Validado": "revision",
+        "Agendado": "revision",
+        "En diagnóstico": "proceso",
+        "Esperando aprobación": "proceso",
+        "En reparación": "proceso",
+        "Finalizado": "listo",
         "Entregado": "listo",
+        "Cancelado": "cancelado",
     }
     return mapa.get(estado, "revision")
+
+
+def es_estado_valido_ticket(estado):
+    return estado in ESTADOS_TICKET
+
+
+def es_solicitud_ticket(ticket):
+    return not bool(ticket.get("es_orden_trabajo"))
+
+
+def es_orden_activa(ticket):
+    return bool(ticket.get("es_orden_trabajo")) and ticket.get("estado") in ESTADOS_ORDEN_ACTIVA
+
+
+def es_trabajo_finalizado(ticket):
+    return ticket.get("estado") in ESTADOS_ORDEN_CERRADA
 
 
 def construir_etiqueta_precio(servicio):
@@ -257,9 +315,9 @@ def verificar_acceso_operativo():
 
 
 def generar_folio_ticket():
-    fila = ejecutar_consulta("SELECT COUNT(*) AS total FROM tickets", una_fila=True)
-    total = fila["total"] if fila else 0
-    return f"TK-{1000 + total + 1}"
+    fila = ejecutar_consulta("SELECT MAX(id) AS ultimo_id FROM tickets", una_fila=True)
+    ultimo_id = int(fila["ultimo_id"] or 0) if fila else 0
+    return f"TK-{1000 + ultimo_id + 1}"
 
 
 def obtener_tickets_usuario():
@@ -268,7 +326,8 @@ def obtener_tickets_usuario():
             """
             SELECT t.id AS id_ticket, t.folio, t.servicio_solicitado AS servicio, t.equipo, t.descripcion,
                    t.precio_estimado_referencial, t.detalle_precio_estimado, t.acepta_politica_domicilio,
-                   DATE_FORMAT(t.fecha_creacion, '%d/%m/%Y') AS fecha, t.estado
+                     t.modalidad_atencion, t.notas_adicionales, t.es_orden_trabajo,
+                     DATE_FORMAT(t.fecha_creacion, '%d/%m/%Y') AS fecha, t.estado
             FROM tickets t
             ORDER BY t.id DESC
             """,
@@ -279,7 +338,8 @@ def obtener_tickets_usuario():
             """
             SELECT t.id AS id_ticket, t.folio, t.servicio_solicitado AS servicio, t.equipo, t.descripcion,
                    t.precio_estimado_referencial, t.detalle_precio_estimado, t.acepta_politica_domicilio,
-                   DATE_FORMAT(t.fecha_creacion, '%d/%m/%Y') AS fecha, t.estado
+                     t.modalidad_atencion, t.notas_adicionales, t.es_orden_trabajo,
+                     DATE_FORMAT(t.fecha_creacion, '%d/%m/%Y') AS fecha, t.estado
             FROM tickets t
             WHERE t.id_usuario = %s
             ORDER BY t.id DESC
@@ -302,6 +362,10 @@ def obtener_tickets_usuario():
         else:
             fila["precio_estimado_mostrar"] = "Pendiente de diagnóstico"
 
+        fila["es_solicitud"] = es_solicitud_ticket(fila)
+        fila["es_orden_activa"] = es_orden_activa(fila)
+        fila["es_trabajo_finalizado"] = es_trabajo_finalizado(fila)
+
     return filas
 
 
@@ -317,6 +381,7 @@ def obtener_ticket_por_id(id_ticket):
             f"""
             SELECT t.id, t.folio, t.id_usuario, t.servicio_solicitado, t.equipo, t.descripcion, t.estado,
                    t.precio_estimado_referencial, t.detalle_precio_estimado, t.acepta_politica_domicilio,
+                     t.modalidad_atencion, t.notas_adicionales, t.es_orden_trabajo,
                    DATE_FORMAT(t.fecha_creacion, '%d/%m/%Y %H:%i') AS fecha,
                    CONCAT(u.nombres, ' ', u.apellidos) AS cliente
             FROM tickets t
@@ -347,6 +412,211 @@ def obtener_mensajes_ticket(id_ticket):
         )
     except Error:
         return []
+
+
+def obtener_historial_ticket(id_ticket):
+    try:
+        return ejecutar_consulta(
+            """
+            SELECT h.id, h.estado_anterior, h.estado_nuevo, h.comentario,
+                   DATE_FORMAT(h.fecha_creacion, '%d/%m/%Y %H:%i') AS fecha,
+                   COALESCE(u.nombres, 'Sistema') AS actor
+            FROM ticket_historial h
+            LEFT JOIN usuarios u ON u.id = h.id_usuario
+            WHERE h.id_ticket = %s
+            ORDER BY h.id DESC
+            """,
+            (id_ticket,),
+            varias_filas=True,
+        )
+    except Error:
+        return []
+
+
+def registrar_historial_ticket(id_ticket, estado_anterior, estado_nuevo, id_usuario=None, comentario=""):
+    try:
+        ejecutar_consulta(
+            """
+            INSERT INTO ticket_historial (id_ticket, estado_anterior, estado_nuevo, id_usuario, comentario)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (id_ticket, estado_anterior, estado_nuevo, id_usuario, (comentario or "")[:500]),
+            confirmar=True,
+        )
+    except Error:
+        return False
+    return True
+
+
+def cambiar_estado_ticket(id_ticket, nuevo_estado, id_usuario=None, comentario=""):
+    if not es_estado_valido_ticket(nuevo_estado):
+        return False, "Estado de ticket inválido."
+
+    try:
+        ticket = ejecutar_consulta(
+            "SELECT id, estado, es_orden_trabajo FROM tickets WHERE id = %s LIMIT 1",
+            (id_ticket,),
+            una_fila=True,
+        )
+        if not ticket:
+            return False, "El ticket seleccionado no existe."
+
+        estado_anterior = ticket.get("estado")
+        if estado_anterior == nuevo_estado:
+            return True, "Sin cambios: el ticket ya está en ese estado."
+
+        es_orden = bool(ticket.get("es_orden_trabajo"))
+        if es_orden:
+            if nuevo_estado not in TRANSICIONES_ORDEN:
+                return False, "Estado inválido para una orden de trabajo."
+            permitidos = TRANSICIONES_ORDEN.get(estado_anterior, set())
+            if nuevo_estado not in permitidos:
+                return False, f"Transición no permitida de '{estado_anterior}' a '{nuevo_estado}'."
+        else:
+            if nuevo_estado not in TRANSICIONES_SOLICITUD:
+                return False, "Estado inválido para una solicitud."
+            permitidos = TRANSICIONES_SOLICITUD.get(estado_anterior, set())
+            if nuevo_estado not in permitidos:
+                return False, f"Transición no permitida de '{estado_anterior}' a '{nuevo_estado}'."
+
+        ejecutar_consulta(
+            "UPDATE tickets SET estado = %s WHERE id = %s",
+            (nuevo_estado, id_ticket),
+            confirmar=True,
+        )
+        registrar_historial_ticket(id_ticket, estado_anterior, nuevo_estado, id_usuario, comentario)
+        return True, "Estado actualizado correctamente."
+    except Error:
+        return False, "No fue posible actualizar el estado del ticket."
+
+
+def convertir_ticket_a_orden(id_ticket, id_usuario=None):
+    try:
+        ticket = ejecutar_consulta(
+            "SELECT id, estado, es_orden_trabajo FROM tickets WHERE id = %s LIMIT 1",
+            (id_ticket,),
+            una_fila=True,
+        )
+        if not ticket:
+            return False, "La solicitud indicada no existe."
+
+        if ticket.get("es_orden_trabajo"):
+            return False, "Este ticket ya fue convertido en orden de trabajo."
+
+        if ticket.get("estado") not in {"Validado", "Agendado"}:
+            return False, "Solo las solicitudes validadas o agendadas pueden convertirse en orden de trabajo."
+
+        ejecutar_consulta(
+            """
+            UPDATE tickets
+            SET es_orden_trabajo = 1,
+                fecha_orden = NOW(),
+                estado = 'En diagnóstico'
+            WHERE id = %s
+            """,
+            (id_ticket,),
+            confirmar=True,
+        )
+
+        registrar_historial_ticket(
+            id_ticket,
+            ticket.get("estado"),
+            "En diagnóstico",
+            id_usuario,
+            "Solicitud convertida a orden de trabajo.",
+        )
+        return True, "Solicitud convertida en orden de trabajo correctamente."
+    except Error:
+        return False, "No fue posible convertir la solicitud en orden de trabajo."
+
+
+def _columna_existe_tabla(tabla, columna):
+    try:
+        fila = ejecutar_consulta(
+            """
+            SELECT COUNT(*) AS total
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = %s AND column_name = %s
+            """,
+            (tabla, columna),
+            una_fila=True,
+        )
+        return bool(fila and fila.get("total", 0) > 0)
+    except Error:
+        return False
+
+
+def asegurar_modelo_tickets():
+    try:
+        ejecutar_consulta(
+            """
+            CREATE TABLE IF NOT EXISTS ticket_historial (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                id_ticket INT NOT NULL,
+                estado_anterior VARCHAR(60) NULL,
+                estado_nuevo VARCHAR(60) NOT NULL,
+                id_usuario INT NULL,
+                comentario VARCHAR(500) NULL,
+                fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (id_ticket) REFERENCES tickets(id) ON DELETE CASCADE,
+                FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE SET NULL
+            )
+            """,
+            confirmar=True,
+        )
+
+        if not _columna_existe_tabla("tickets", "modalidad_atencion"):
+            ejecutar_consulta(
+                """
+                ALTER TABLE tickets
+                ADD COLUMN modalidad_atencion ENUM('domicilio', 'sucursal') NOT NULL DEFAULT 'sucursal'
+                """,
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("tickets", "notas_adicionales"):
+            ejecutar_consulta(
+                "ALTER TABLE tickets ADD COLUMN notas_adicionales TEXT NULL",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("tickets", "es_orden_trabajo"):
+            ejecutar_consulta(
+                "ALTER TABLE tickets ADD COLUMN es_orden_trabajo TINYINT(1) NOT NULL DEFAULT 0",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("tickets", "fecha_orden"):
+            ejecutar_consulta(
+                "ALTER TABLE tickets ADD COLUMN fecha_orden DATETIME NULL",
+                confirmar=True,
+            )
+
+        ejecutar_consulta("UPDATE tickets SET estado = 'Pendiente' WHERE estado = 'Recibido'", confirmar=True)
+        ejecutar_consulta("UPDATE tickets SET estado = 'Validado' WHERE estado = 'En revisión'", confirmar=True)
+        ejecutar_consulta("UPDATE tickets SET estado = 'En diagnóstico' WHERE estado = 'En proceso'", confirmar=True)
+        ejecutar_consulta("UPDATE tickets SET estado = 'Finalizado' WHERE estado = 'Listo para recoger'", confirmar=True)
+
+        ejecutar_consulta(
+            """
+            ALTER TABLE tickets
+            MODIFY COLUMN estado ENUM(
+                'Pendiente',
+                'Validado',
+                'Agendado',
+                'En diagnóstico',
+                'Esperando aprobación',
+                'En reparación',
+                'Finalizado',
+                'Entregado',
+                'Cancelado'
+            ) NOT NULL DEFAULT 'Pendiente'
+            """,
+            confirmar=True,
+        )
+    except Error:
+        return False
+    return True
 
 
 def construir_detalle_ampliado_servicio(servicio):

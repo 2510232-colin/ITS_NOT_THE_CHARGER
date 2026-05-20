@@ -12,27 +12,30 @@
   <article class="seccion">
     <h2>Panel de administración</h2>
     <div class="rejilla rejilla-3" style="margin-top: .9rem;">
-      <article class="card"><h3>Productos</h3><div class="precio">{{ total_productos }}</div></article>
-      <article class="card"><h3>Servicios</h3><div class="precio">{{ total_servicios }}</div></article>
-      <article class="card"><h3>Tickets</h3><div class="precio">{{ total_tickets }}</div></article>
+      <article class="card"><h3>Solicitudes pendientes</h3><div class="precio">{{ solicitudes_pendientes }}</div></article>
+      <article class="card"><h3>Órdenes activas</h3><div class="precio">{{ ordenes_activas }}</div></article>
+      <article class="card"><h3>Trabajos finalizados</h3><div class="precio">{{ trabajos_finalizados }}</div></article>
     </div>
     <div class="rejilla rejilla-3" style="margin-top: .9rem;">
-      <article class="card"><h3>Pedidos</h3><div class="precio">{{ total_pedidos }}</div></article>
-      <article class="card"><h3>Usuarios</h3><div class="precio">{{ total_usuarios }}</div></article>
+      <article class="card"><h3>Servicios activos</h3><div class="precio">{{ total_servicios }}</div></article>
+      <article class="card"><h3>Usuarios registrados</h3><div class="precio">{{ total_usuarios }}</div></article>
       <article class="card"><h3>Estado del sistema</h3><p>Operando con base de datos MySQL</p></article>
     </div>
   </article>
 
   <article class="seccion">
-    <h2>Actividad reciente</h2>
+    <h2>Solicitudes y órdenes recientes</h2>
     <table class="tabla" style="margin-top:.8rem;">
-      <tr><th>Folio</th><th>Servicio</th><th>Estado</th></tr>
-      {% for ticket in tickets[:2] %}
+      <tr><th>Folio</th><th>Servicio</th><th>Estado</th><th>Tipo</th></tr>
+      {% for ticket in tickets[:5] %}
         <tr>
           <td>{{ ticket.folio }}</td>
           <td>{{ ticket.servicio }}</td>
           <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
+          <td>{{ 'Solicitud' if ticket.es_solicitud else 'Orden' }}</td>
         </tr>
+      {% else %}
+        <tr><td colspan="4">Aún no hay actividad reciente.</td></tr>
       {% endfor %}
     </table>
   </article>

@@ -12,22 +12,25 @@
   <article class="seccion">
     <h2>Panel técnico</h2>
     <div class="rejilla rejilla-3" style="margin-top: .9rem;">
-      <article class="card"><h3>Tickets por atender</h3><div class="precio">{{ total_tickets }}</div></article>
-      <article class="card"><h3>Equipos en proceso</h3><div class="precio">{{ tickets_en_proceso }}</div></article>
-      <article class="card"><h3>Listos para entrega</h3><div class="precio">{{ tickets_listos }}</div></article>
+      <article class="card"><h3>Solicitudes pendientes</h3><div class="precio">{{ solicitudes_pendientes }}</div></article>
+      <article class="card"><h3>Órdenes activas</h3><div class="precio">{{ tickets_en_proceso }}</div></article>
+      <article class="card"><h3>Finalizados por entregar</h3><div class="precio">{{ tickets_listos }}</div></article>
     </div>
   </article>
 
   <article class="seccion">
-    <h2>Cola de trabajo</h2>
+    <h2>Cola operativa</h2>
     <table class="tabla" style="margin-top:.8rem;">
-      <tr><th>Folio</th><th>Servicio</th><th>Estado</th></tr>
-      {% for ticket in tickets[:2] %}
+      <tr><th>Folio</th><th>Servicio</th><th>Estado</th><th>Tipo</th></tr>
+      {% for ticket in tickets[:6] %}
         <tr>
           <td>{{ ticket.folio }}</td>
           <td>{{ ticket.servicio }}</td>
           <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
+          <td>{{ 'Solicitud' if ticket.es_solicitud else 'Orden' }}</td>
         </tr>
+      {% else %}
+        <tr><td colspan="4">No hay elementos en cola por el momento.</td></tr>
       {% endfor %}
     </table>
   </article>

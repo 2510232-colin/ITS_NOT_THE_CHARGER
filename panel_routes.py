@@ -3,10 +3,20 @@ from mysql.connector import Error
 from werkzeug.security import generate_password_hash
 
 from app_core import (
+    ESTADOS_ORDEN_ACTIVA,
+    ESTADOS_ORDEN_CERRADA,
+    ESTADOS_SOLICITUD,
     ESTADOS_PEDIDO,
     ESTADOS_TICKET,
+    asegurar_modelo_tickets,
+    cambiar_estado_ticket,
+    convertir_ticket_a_orden,
     estado_a_clase,
+    es_orden_activa,
+    es_solicitud_ticket,
+    es_trabajo_finalizado,
     obtener_contenido_sitio,
+    obtener_historial_ticket,
     obtener_mensajes_ticket,
     obtener_ticket_por_id,
     obtener_tickets_usuario,
@@ -41,6 +51,8 @@ CATEGORIAS_SERVICIO = [
 
 
 def registrar_rutas_panel(app):
+    asegurar_modelo_tickets()
+
     @app.route("/panel/cliente")
     def cliente_dashboard():
         if not requiere_sesion():
@@ -112,6 +124,9 @@ def registrar_rutas_panel(app):
         total_productos = ejecutar_consulta("SELECT COUNT(*) AS total FROM productos", una_fila=True)["total"]
         total_servicios = ejecutar_consulta("SELECT COUNT(*) AS total FROM servicios", una_fila=True)["total"]
         total_usuarios = ejecutar_consulta("SELECT COUNT(*) AS total FROM usuarios", una_fila=True)["total"]
+        solicitudes_pendientes = sum(1 for item in tickets if item.get("estado") == "Pendiente")
+        ordenes_activas = sum(1 for item in tickets if es_orden_activa(item))
+        trabajos_finalizados = sum(1 for item in tickets if es_trabajo_finalizado(item))
         try:
             total_pedidos = ejecutar_consulta("SELECT COUNT(*) AS total FROM pedidos", una_fila=True)["total"]
         except Error:
@@ -125,6 +140,9 @@ def registrar_rutas_panel(app):
             total_servicios=total_servicios,
             total_usuarios=total_usuarios,
             total_pedidos=total_pedidos,
+            solicitudes_pendientes=solicitudes_pendientes,
+            ordenes_activas=ordenes_activas,
+            trabajos_finalizados=trabajos_finalizados,
             titulo_panel="INTC Admin",
         )
 
@@ -647,13 +665,15 @@ def registrar_rutas_panel(app):
             return redirect(url_for("login"))
 
         tickets = obtener_tickets_usuario()
-        en_proceso = sum(1 for ticket in tickets if ticket.get("estado") == "En proceso")
-        listos = sum(1 for ticket in tickets if ticket.get("estado") == "Listo para recoger")
+        solicitudes_pendientes = sum(1 for ticket in tickets if ticket.get("estado") == "Pendiente")
+        en_proceso = sum(1 for ticket in tickets if ticket.get("estado") in ESTADOS_ORDEN_ACTIVA)
+        listos = sum(1 for ticket in tickets if ticket.get("estado") == "Finalizado")
 
         return render_template(
             "gestor_dashboard.html",
             tickets=tickets,
             total_tickets=len(tickets),
+            solicitudes_pendientes=solicitudes_pendientes,
             tickets_en_proceso=en_proceso,
             tickets_listos=listos,
             titulo_panel="INTC Técnico",
@@ -669,10 +689,19 @@ def registrar_rutas_panel(app):
             return redirect(url_for("login"))
 
         tickets = obtener_tickets_usuario()
+        solicitudes = [item for item in tickets if es_solicitud_ticket(item)]
+        ordenes_activas = [item for item in tickets if es_orden_activa(item)]
+        trabajos_finalizados = [item for item in tickets if es_trabajo_finalizado(item)]
         return render_template(
             "tickets.html",
             tickets=tickets,
+            solicitudes=solicitudes,
+            ordenes_activas=ordenes_activas,
+            trabajos_finalizados=trabajos_finalizados,
             estados_ticket=ESTADOS_TICKET,
+            estados_solicitud=ESTADOS_SOLICITUD,
+            estados_orden_activa=ESTADOS_ORDEN_ACTIVA,
+            estados_orden_cerrada=ESTADOS_ORDEN_CERRADA,
             titulo_panel="INTC Seguimiento",
         )
 
@@ -699,6 +728,21 @@ def registrar_rutas_panel(app):
         except Error:
             flash("No fue posible eliminar el ticket.", "error")
 
+        return redirect(url_for("tickets"))
+
+    @app.route("/panel/tickets/convertir-orden", methods=["POST"])
+    def convertir_solicitud_orden():
+        if not requiere_sesion() or not requiere_rol("administrador"):
+            flash("No tienes permisos para convertir solicitudes en órdenes.", "error")
+            return redirect(url_for("login"))
+
+        id_ticket = limpiar_texto(request.form.get("id_ticket"))
+        if not id_ticket.isdigit():
+            flash("Solicitud inválida para conversión.", "error")
+            return redirect(url_for("tickets"))
+
+        ok, mensaje = convertir_ticket_a_orden(int(id_ticket), session.get("usuario_id"))
+        flash(mensaje, "exito" if ok else "error")
         return redirect(url_for("tickets"))
 
     @app.route("/tickets")
@@ -826,6 +870,9 @@ def registrar_rutas_panel(app):
             return redirect(url_for("tickets"))
 
         ticket["clase_estado"] = estado_a_clase(ticket["estado"])
+        ticket["es_solicitud"] = es_solicitud_ticket(ticket)
+        ticket["es_orden_activa"] = es_orden_activa(ticket)
+        ticket["es_trabajo_finalizado"] = es_trabajo_finalizado(ticket)
         if ticket.get("detalle_precio_estimado"):
             ticket["precio_estimado_mostrar"] = ticket["detalle_precio_estimado"]
         elif ticket.get("precio_estimado_referencial") is not None:
@@ -834,11 +881,13 @@ def registrar_rutas_panel(app):
             ticket["precio_estimado_mostrar"] = "Pendiente de diagnóstico"
 
         mensajes_chat = obtener_mensajes_ticket(ticket["id"])
+        historial_estado = obtener_historial_ticket(ticket["id"])
 
         return render_template(
             "ticket_detalle.html",
             ticket=ticket,
             mensajes_chat=mensajes_chat,
+            historial_estado=historial_estado,
             titulo_panel="INTC Seguimiento",
         )
 
@@ -883,27 +932,12 @@ def registrar_rutas_panel(app):
             flash("Identificador de ticket inválido.", "error")
             return redirect(url_for("tickets"))
 
-        if nuevo_estado not in ESTADOS_TICKET:
-            flash("Estado de ticket inválido.", "error")
-            return redirect(url_for("tickets"))
-
-        try:
-            ticket = ejecutar_consulta(
-                "SELECT id FROM tickets WHERE id = %s",
-                (int(id_ticket),),
-                una_fila=True,
-            )
-            if not ticket:
-                flash("El ticket seleccionado no existe.", "error")
-                return redirect(url_for("tickets"))
-
-            ejecutar_consulta(
-                "UPDATE tickets SET estado = %s WHERE id = %s",
-                (nuevo_estado, int(id_ticket)),
-                confirmar=True,
-            )
-            flash("Estado de ticket actualizado correctamente.", "exito")
-        except Error:
-            flash("No fue posible actualizar el estado del ticket.", "error")
+        ok, mensaje = cambiar_estado_ticket(
+            int(id_ticket),
+            nuevo_estado,
+            session.get("usuario_id"),
+            "Cambio de estado desde panel operativo.",
+        )
+        flash(mensaje, "exito" if ok else "error")
 
         return redirect(url_for("tickets"))

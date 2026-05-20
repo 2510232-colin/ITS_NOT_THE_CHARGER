@@ -24,6 +24,13 @@
         <a class="enlace-menu {% if seccion_activa == 'productos' %}activo{% endif %}" href="{{ url_for('productos') }}">Productos</a>
         <a class="enlace-menu {% if seccion_activa == 'nosotros' %}activo{% endif %}" href="{{ url_for('nosotros') }}">Nosotros</a>
         <a class="enlace-menu {% if seccion_activa == 'contacto' %}activo{% endif %}" href="{{ url_for('contacto') }}">Contacto</a>
+        {% if usuario_actual.id %}
+          <a class="enlace-menu enlace-menu-accion-movil" href="{{ url_for('mi_cuenta') }}">Mi cuenta</a>
+          <a class="enlace-menu enlace-menu-accion-movil" href="{{ url_for('logout') }}">Salir</a>
+        {% else %}
+          <a class="enlace-menu enlace-menu-accion-movil" href="{{ url_for('login') }}">Ingresar</a>
+          <a class="enlace-menu enlace-menu-accion-movil" href="{{ url_for('cotizacion') }}">Cotizar</a>
+        {% endif %}
       </nav>
       <div class="acciones-nav">
         {% if usuario_actual.id %}

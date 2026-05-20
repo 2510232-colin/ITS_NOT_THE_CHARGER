@@ -2,6 +2,7 @@ from flask import flash, redirect, render_template, request, session, url_for
 from mysql.connector import Error
 
 from app_core import (
+    asegurar_modelo_tickets,
     construir_detalle_ampliado_servicio,
     construir_etiqueta_precio,
     enriquecer_servicios,
@@ -9,6 +10,7 @@ from app_core import (
     generar_folio_ticket,
     obtener_categorias_servicios,
     obtener_contenido_sitio,
+    registrar_historial_ticket,
     recomendar_servicios_por_palabras,
     requiere_sesion,
 )
@@ -245,6 +247,8 @@ def registrar_rutas_publicas(app):
 
     @app.route("/cotizacion", methods=["GET", "POST"])
     def cotizacion():
+        asegurar_modelo_tickets()
+        servicio_prefill = limpiar_texto(request.args.get("servicio", ""))[:140]
         if not requiere_sesion():
             flash("Debes iniciar sesión para generar una cotización.", "error")
             return redirect(url_for("login"))
@@ -253,6 +257,8 @@ def registrar_rutas_publicas(app):
             servicio_requerido = limpiar_texto(request.form.get("servicio_requerido"))
             equipo = limpiar_texto(request.form.get("equipo"))
             descripcion_problema = limpiar_texto(request.form.get("descripcion_problema"))
+            modalidad_atencion = limpiar_texto(request.form.get("modalidad_atencion"))
+            notas_adicionales = limpiar_texto(request.form.get("notas_adicionales"))
             acepta_politica_domicilio = request.form.get("acepta_politica_domicilio")
 
             ok, error = validar_texto_seguro(servicio_requerido, "servicio", 3, 140)
@@ -270,7 +276,17 @@ def registrar_rutas_publicas(app):
                 flash(error, "error")
                 return redirect(url_for("cotizacion"))
 
-            if acepta_politica_domicilio != "on":
+            if modalidad_atencion not in ["domicilio", "sucursal"]:
+                flash("Selecciona una modalidad de atención válida.", "error")
+                return redirect(url_for("cotizacion"))
+
+            if notas_adicionales:
+                ok, error = validar_texto_seguro(notas_adicionales, "notas adicionales", 3, 2000)
+                if not ok:
+                    flash(error, "error")
+                    return redirect(url_for("cotizacion"))
+
+            if modalidad_atencion == "domicilio" and acepta_politica_domicilio != "on":
                 flash("Debes aceptar la política de servicio a domicilio para continuar.", "error")
                 return redirect(url_for("cotizacion"))
 
@@ -286,9 +302,10 @@ def registrar_rutas_publicas(app):
                     """
                     INSERT INTO tickets (
                         folio, id_usuario, servicio_solicitado, equipo, descripcion, estado,
-                        precio_estimado_referencial, detalle_precio_estimado, acepta_politica_domicilio
+                        precio_estimado_referencial, detalle_precio_estimado, acepta_politica_domicilio,
+                        modalidad_atencion, notas_adicionales, es_orden_trabajo
                     )
-                    VALUES (%s, %s, %s, %s, %s, 'Recibido', %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, 'Pendiente', %s, %s, %s, %s, %s, 0)
                     """,
                     (
                         folio_ticket,
@@ -298,16 +315,29 @@ def registrar_rutas_publicas(app):
                         descripcion_problema,
                         estimado_referencial,
                         detalle_estimado,
-                        1,
+                        1 if modalidad_atencion == "domicilio" else 0,
+                        modalidad_atencion,
+                        notas_adicionales,
                     ),
                     confirmar=True,
                 )
-                flash(f"Ticket generado: {folio_ticket}. Estimado referencial: {detalle_estimado}.", "exito")
+                registrar_historial_ticket(
+                    id_ticket,
+                    None,
+                    "Pendiente",
+                    session.get("usuario_id"),
+                    "Solicitud de servicio creada por el cliente.",
+                )
+                flash(f"Solicitud creada correctamente. Folio: {folio_ticket}.", "exito")
                 return redirect(url_for("ticket_detalle", id_ticket=id_ticket))
             except Error:
-                flash("No fue posible generar el ticket. Verifica conexión a base de datos.", "error")
+                flash("No fue posible generar la solicitud. Verifica conexión a base de datos.", "error")
 
-        return render_template("cotizacion.html", seccion_activa="servicios")
+        return render_template(
+            "cotizacion.html",
+            seccion_activa="servicios",
+            servicio_prefill=servicio_prefill,
+        )
 
     @app.route("/carrito")
     def carrito():

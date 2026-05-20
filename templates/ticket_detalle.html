@@ -11,14 +11,16 @@
 {% block contenido_panel %}
   <article class="seccion">
     <div class="titulo-seccion">
-      <h2>Ticket {{ ticket.folio }}</h2>
+      <h2>Folio {{ ticket.folio }}</h2>
       <span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span>
     </div>
     <div class="rejilla rejilla-2" style="margin-top:.7rem;">
+      <article class="card"><h3>Tipo de registro</h3><p>{% if ticket.es_solicitud %}Solicitud de servicio{% else %}Orden de trabajo{% endif %}</p></article>
       <article class="card"><h3>Cliente</h3><p>{{ ticket.cliente }}</p></article>
       <article class="card"><h3>Fecha de creación</h3><p>{{ ticket.fecha }}</p></article>
       <article class="card"><h3>Servicio solicitado</h3><p>{{ ticket.servicio_solicitado }}</p></article>
       <article class="card"><h3>Equipo</h3><p>{{ ticket.equipo }}</p></article>
+      <article class="card"><h3>Modalidad de atención</h3><p>{{ (ticket.modalidad_atencion or 'sucursal')|capitalize }}</p></article>
     </div>
   </article>
 
@@ -38,10 +40,39 @@
       <h3>Descripción del problema registrada</h3>
       <p>{{ ticket.descripcion }}</p>
     </article>
+    {% if ticket.notas_adicionales %}
+      <article class="card" style="margin-top:.9rem;">
+        <h3>Notas adicionales del cliente</h3>
+        <p>{{ ticket.notas_adicionales }}</p>
+      </article>
+    {% endif %}
     <div class="hero-acciones">
       <a class="boton boton-outline" href="{{ url_for('tickets') }}">Volver al listado</a>
-      <a class="boton boton-primario" href="{{ url_for('cotizacion') }}">Crear nuevo ticket</a>
+      <a class="boton boton-primario" href="{{ url_for('cotizacion') }}">Crear nueva solicitud</a>
     </div>
+  </article>
+
+  <article class="seccion">
+    <div class="titulo-seccion"><h2>Historial de cambios de estado</h2></div>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Fecha</th><th>Actor</th><th>Cambio</th><th>Comentario</th></tr>
+      {% for evento in historial_estado %}
+        <tr>
+          <td>{{ evento.fecha }}</td>
+          <td>{{ evento.actor }}</td>
+          <td>
+            {% if evento.estado_anterior %}
+              {{ evento.estado_anterior }} → {{ evento.estado_nuevo }}
+            {% else %}
+              {{ evento.estado_nuevo }}
+            {% endif %}
+          </td>
+          <td>{{ evento.comentario or 'Sin comentario' }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4">Aún no hay historial de cambios para este folio.</td></tr>
+      {% endfor %}
+    </table>
   </article>
 
   <article class="seccion">
@@ -49,7 +80,11 @@
     <div style="display:grid; gap:.7rem; margin-top:.6rem;">
       {% for item in mensajes_chat %}
         <article class="card {% if item.id_usuario == usuario_actual.id %}card-chat-propio{% endif %}">
-          <h3 style="font-size:.92rem;">{{ item.nombres }} · {{ item.rol|capitalize }} · {{ item.fecha }}</h3>
+          {% set rol_visible = item.rol|capitalize %}
+          {% if usuario_actual.rol == 'cliente' and item.rol in ['administrador', 'tecnico'] %}
+            {% set rol_visible = 'Técnico' %}
+          {% endif %}
+          <h3 style="font-size:.92rem;">{{ item.nombres }} · {{ rol_visible }} · {{ item.fecha }}</h3>
           <p style="margin-top:.35rem; color:#2a2e30;">{{ item.mensaje }}</p>
         </article>
       {% else %}
@@ -60,7 +95,7 @@
     <form class="formulario" style="margin-top:1rem;" method="POST" action="{{ url_for('enviar_mensaje_ticket', id_ticket=ticket.id) }}">
       <div class="campo">
         <label>Nuevo mensaje</label>
-        <textarea name="mensaje" placeholder="Escribe aquí la actualización para el cliente o para soporte..." required></textarea>
+        <textarea name="mensaje" placeholder="{% if usuario_actual.rol == 'cliente' %}Escribe tu mensaje para soporte técnico...{% else %}Escribe aquí la actualización para el cliente...{% endif %}" required></textarea>
       </div>
       <button type="submit" class="boton boton-primario">Enviar mensaje</button>
     </form>

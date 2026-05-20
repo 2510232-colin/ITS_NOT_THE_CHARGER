@@ -9,17 +9,63 @@
 
 {% block contenido_panel %}
   <article class="seccion">
-    <h2>{% if usuario_actual.rol in ['administrador', 'tecnico'] %}Gestión de tickets{% else %}Mis tickets y estados{% endif %}</h2>
+    <h2>{% if usuario_actual.rol in ['administrador', 'tecnico'] %}Gestión de solicitudes y órdenes{% else %}Mis solicitudes y estados{% endif %}</h2>
     <table class="tabla" style="margin-top:.8rem;">
-      <tr><th>Folio</th><th>Servicio</th><th>Estimado</th><th>Fecha</th><th>Estado</th><th>Trazabilidad</th>{% if usuario_actual.rol in ['administrador', 'tecnico'] %}<th>Acción</th>{% endif %}</tr>
-      {% for ticket in tickets %}
+      <tr><th>Folio</th><th>Servicio</th><th>Estimado</th><th>Fecha</th><th>Estado</th><th>Detalle</th>{% if usuario_actual.rol in ['administrador', 'tecnico'] %}<th>Acción</th>{% endif %}</tr>
+      {% for ticket in solicitudes %}
         <tr>
           <td>{{ ticket.folio }}</td>
           <td>{{ ticket.servicio }}</td>
           <td>{{ ticket.precio_estimado_lista }}</td>
           <td>{{ ticket.fecha }}</td>
           <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
-          <td><a class="boton boton-outline" href="{{ url_for('ticket_detalle', id_ticket=ticket.id_ticket) }}">Ver ticket</a></td>
+          <td><a class="boton boton-outline" href="{{ url_for('ticket_detalle', id_ticket=ticket.id_ticket) }}">Ver solicitud</a></td>
+          {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+            <td>
+              <div class="acciones-tabla-vertical">
+                <form method="POST" action="{{ url_for('actualizar_estado_ticket') }}" class="acciones-tabla-inline">
+                  <input type="hidden" name="id_ticket" value="{{ ticket.id_ticket }}" />
+                  <select name="nuevo_estado" class="input-accion">
+                    {% for estado in estados_solicitud %}
+                      <option value="{{ estado }}" {% if estado == ticket.estado %}selected{% endif %}>{{ estado }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="boton boton-outline">Guardar</button>
+                </form>
+                {% if usuario_actual.rol == 'administrador' and ticket.estado in ['Validado', 'Agendado'] %}
+                  <form method="POST" action="{{ url_for('convertir_solicitud_orden') }}" class="acciones-tabla-inline">
+                    <input type="hidden" name="id_ticket" value="{{ ticket.id_ticket }}" />
+                    <button type="submit" class="boton boton-primario">Convertir a orden</button>
+                  </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('eliminar_ticket') }}" class="acciones-tabla-inline">
+                  <input type="hidden" name="id_ticket" value="{{ ticket.id_ticket }}" />
+                  <button type="submit" class="boton boton-outline">Eliminar</button>
+                </form>
+              </div>
+            </td>
+          {% endif %}
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="{% if usuario_actual.rol in ['administrador', 'tecnico'] %}7{% else %}6{% endif %}">No hay solicitudes registradas por el momento.</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </article>
+
+  <article class="seccion">
+    <h2>Órdenes de trabajo activas</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Folio</th><th>Servicio</th><th>Estimado</th><th>Fecha</th><th>Estado</th><th>Detalle</th>{% if usuario_actual.rol in ['administrador', 'tecnico'] %}<th>Acción</th>{% endif %}</tr>
+      {% for ticket in ordenes_activas %}
+        <tr>
+          <td>{{ ticket.folio }}</td>
+          <td>{{ ticket.servicio }}</td>
+          <td>{{ ticket.precio_estimado_lista }}</td>
+          <td>{{ ticket.fecha }}</td>
+          <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
+          <td><a class="boton boton-outline" href="{{ url_for('ticket_detalle', id_ticket=ticket.id_ticket) }}">Ver orden</a></td>
           {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
             <td>
               <div class="acciones-tabla-vertical">
@@ -32,9 +78,41 @@
                   </select>
                   <button type="submit" class="boton boton-outline">Guardar</button>
                 </form>
-                <form method="POST" action="{{ url_for('eliminar_ticket') }}" class="acciones-tabla-inline">
+              </div>
+            </td>
+          {% endif %}
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="{% if usuario_actual.rol in ['administrador', 'tecnico'] %}7{% else %}6{% endif %}">No hay órdenes activas en este momento.</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </article>
+
+  <article class="seccion">
+    <h2>Trabajos finalizados</h2>
+    <table class="tabla" style="margin-top:.8rem;">
+      <tr><th>Folio</th><th>Servicio</th><th>Estimado</th><th>Fecha</th><th>Estado</th><th>Detalle</th>{% if usuario_actual.rol in ['administrador', 'tecnico'] %}<th>Acción</th>{% endif %}</tr>
+      {% for ticket in trabajos_finalizados %}
+        <tr>
+          <td>{{ ticket.folio }}</td>
+          <td>{{ ticket.servicio }}</td>
+          <td>{{ ticket.precio_estimado_lista }}</td>
+          <td>{{ ticket.fecha }}</td>
+          <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
+          <td><a class="boton boton-outline" href="{{ url_for('ticket_detalle', id_ticket=ticket.id_ticket) }}">Ver historial</a></td>
+          {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+            <td>
+              <div class="acciones-tabla-vertical">
+                <form method="POST" action="{{ url_for('actualizar_estado_ticket') }}" class="acciones-tabla-inline">
                   <input type="hidden" name="id_ticket" value="{{ ticket.id_ticket }}" />
-                  <button type="submit" class="boton boton-outline">Eliminar</button>
+                  <select name="nuevo_estado" class="input-accion">
+                    {% for estado in estados_ticket %}
+                      <option value="{{ estado }}" {% if estado == ticket.estado %}selected{% endif %}>{{ estado }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="boton boton-outline">Guardar</button>
                 </form>
               </div>
             </td>
@@ -42,7 +120,7 @@
         </tr>
       {% else %}
         <tr>
-          <td colspan="{% if usuario_actual.rol in ['administrador', 'tecnico'] %}7{% else %}6{% endif %}">No hay tickets registrados por el momento.</td>
+          <td colspan="{% if usuario_actual.rol in ['administrador', 'tecnico'] %}7{% else %}6{% endif %}">No hay trabajos finalizados todavía.</td>
         </tr>
       {% endfor %}
     </table>
