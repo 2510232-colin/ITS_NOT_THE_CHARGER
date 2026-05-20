@@ -9,7 +9,7 @@ load_dotenv()
 
 
 def obtener_configuracion_bd():
-    return {
+    configuracion = {
         "host": os.getenv("MYSQL_HOST", "127.0.0.1"),
         "port": int(os.getenv("MYSQL_PORT", "3306")),
         "user": os.getenv("MYSQL_USER", "root"),
@@ -17,6 +17,22 @@ def obtener_configuracion_bd():
         "database": os.getenv("MYSQL_DATABASE", "techcare_db"),
         "autocommit": False,
     }
+
+    ssl_mode = os.getenv("MYSQL_SSL_MODE", "DISABLED").strip().upper()
+    if ssl_mode in {"REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY"}:
+        configuracion["ssl_disabled"] = False
+
+        ssl_ca = os.getenv("MYSQL_SSL_CA", "").strip()
+        if ssl_ca:
+            configuracion["ssl_ca"] = ssl_ca
+
+        if ssl_mode in {"VERIFY_CA", "VERIFY_IDENTITY"}:
+            configuracion["ssl_verify_cert"] = True
+
+        if ssl_mode == "VERIFY_IDENTITY":
+            configuracion["ssl_verify_identity"] = True
+
+    return configuracion
 
 
 def obtener_conexion():
