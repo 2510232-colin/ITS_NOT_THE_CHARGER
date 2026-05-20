@@ -10,7 +10,7 @@
   </section>
 
   <section class="seccion">
-    <form method="GET" action="{{ url_for('servicios') }}" class="formulario">
+    <form method="GET" action="{{ url_for('servicios') }}" class="formulario" id="form-buscador-servicios">
       <div class="campo">
         <label>Cuéntanos qué problema tienes (diagnóstico guiado)</label>
         <input type="text" name="q" value="{{ busqueda }}" maxlength="140" placeholder="Ejemplo: computadora lenta, no enciende, sobrecalienta" />
@@ -27,16 +27,82 @@
           <a class="boton boton-outline" href="{{ url_for('servicios') }}">Limpiar búsqueda</a>
         {% endif %}
       </div>
+      <div id="estado-analizando" class="estado-analizando" hidden>
+        <span class="spinner-carga" aria-hidden="true"></span>
+        <p>Analizando consulta… buscando la mejor opción para ti.</p>
+      </div>
     </form>
   </section>
 
   {% if busqueda %}
     <section class="seccion">
-      <div class="titulo-seccion"><h2>Recomendaciones por palabra clave</h2></div>
+      <div class="resultado-smart-header">
+        <span class="badge badge-smart">Asistente inteligente</span>
+        {% if recomendacion_modo == 'alta' %}
+          <p>Analicé tu consulta y tengo una recomendación principal para ti.</p>
+        {% elif recomendacion_modo == 'ambiguo' %}
+          <p>Tu consulta coincide con varias opciones similares. Te ayudo a elegir.</p>
+        {% else %}
+          <p>Necesito un poco más de contexto para recomendarte con precisión.</p>
+        {% endif %}
+      </div>
+
+      {% if recomendacion_modo == 'alta' and recomendacion_principal %}
+        <div class="titulo-seccion"><h2>Recomendación principal</h2></div>
+        <article class="card card-resultado-principal">
+          <p class="mensaje-resultado">Encontré el servicio más adecuado para tu problema.</p>
+          <h3>{{ recomendacion_principal.titulo }}</h3>
+          <span class="badge">{{ recomendacion_principal.categoria }}</span>
+          <p>{{ recomendacion_principal.descripcion }}</p>
+          <div class="precio">{{ recomendacion_principal.precio_mostrar }}</div>
+          <div class="hero-acciones">
+            <a class="boton boton-primario" href="{{ url_for('servicio_detalle', id=recomendacion_principal.id) }}">Ver detalles</a>
+            <a class="boton boton-outline" href="{{ url_for('cotizacion', servicio=recomendacion_principal.titulo) }}">Solicitar servicio</a>
+          </div>
+        </article>
+      {% elif recomendacion_modo == 'ambiguo' and recomendaciones_comparables %}
+        <div class="titulo-seccion"><h2>Opciones parecidas</h2></div>
+        <article class="card card-resultado-ambiguedad">
+          <p class="mensaje-resultado">Encontré varias opciones parecidas, ¿cuál describe mejor tu problema?</p>
+          <div class="rejilla rejilla-3">
+            {% for servicio in recomendaciones_comparables %}
+              <article class="card card-comparable {% if recomendacion_sugerido_id and recomendacion_sugerido_id == servicio.id %}card-sugerida{% endif %}">
+                {% if recomendacion_sugerido_id and recomendacion_sugerido_id == servicio.id %}
+                  <span class="badge badge-sugerida">Sugerencia inteligente</span>
+                {% endif %}
+                <h3>{{ servicio.titulo }}</h3>
+                <span class="badge">{{ servicio.categoria }}</span>
+                <p>{{ servicio.descripcion }}</p>
+                <p class="ejemplo-problema"><strong>Ejemplo:</strong> {{ (servicio.palabras_clave or servicio.categoria)|truncate(80) }}</p>
+                <div class="precio">{{ servicio.precio_mostrar }}</div>
+                <div class="hero-acciones">
+                  <a class="boton boton-primario" href="{{ url_for('servicio_detalle', id=servicio.id) }}">Seleccionar</a>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        </article>
+      {% else %}
+        <div class="titulo-seccion"><h2>Necesito más contexto</h2></div>
+        <article class="card card-resultado-bajo">
+          <h3>No encontré una coincidencia clara todavía</h3>
+          <p>Cuéntame un poco más y te recomendaré mejor:</p>
+          <ul class="lista-detalle">
+            {% for sugerencia in sugerencias_contexto %}
+              <li>{{ sugerencia }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+      {% endif %}
+
       {% if recomendaciones %}
+        <div class="titulo-seccion" style="margin-top:1rem;"><h2>Más recomendaciones</h2></div>
         <div class="rejilla rejilla-2">
           {% for servicio in recomendaciones %}
             <article class="card">
+              {% if recomendacion_sugerido_id and recomendacion_sugerido_id == servicio.id %}
+                <span class="badge badge-sugerida">Seleccionada por IA</span>
+              {% endif %}
               <h3>{{ servicio.titulo }}</h3>
               <span class="badge">{{ servicio.categoria }}</span>
               <p>{{ servicio.descripcion }}</p>
@@ -45,11 +111,6 @@
             </article>
           {% endfor %}
         </div>
-      {% else %}
-        <article class="card">
-          <h3>Sin recomendaciones directas</h3>
-          <p>Prueba con palabras más específicas como “sobrecalienta”, “pantalla azul” o “mantenimiento”.</p>
-        </article>
       {% endif %}
     </section>
   {% endif %}

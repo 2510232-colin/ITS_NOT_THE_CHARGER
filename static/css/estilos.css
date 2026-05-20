@@ -352,6 +352,99 @@ ul {
   margin-top: 0.2rem;
 }
 
+.resultado-smart-header {
+  margin-bottom: 1rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid #bdd8ff;
+  border-radius: 12px;
+  background: linear-gradient(160deg, #f4f9ff, #eef5ff);
+}
+
+.resultado-smart-header p {
+  margin-top: 0.45rem;
+  color: #284d78;
+  font-size: 0.93rem;
+}
+
+.badge-smart {
+  background: #2b8eff;
+  color: #fff;
+  font-weight: 700;
+}
+
+.estado-analizando {
+  margin-top: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--color-texto-suave);
+  font-size: 0.92rem;
+}
+
+.spinner-carga {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #c9d8ea;
+  border-top-color: var(--color-primario);
+  animation: girar-carga 0.9s linear infinite;
+}
+
+@keyframes girar-carga {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.card-resultado-principal {
+  background: linear-gradient(160deg, #f8fbff, #eef5ff);
+  border-color: #7fb5ff;
+  border-left: 5px solid #2b8eff;
+}
+
+.card-resultado-ambiguedad {
+  background: #fbfdff;
+  border-color: #b9cbe2;
+  border-left: 5px solid #6f7f92;
+}
+
+.card-resultado-bajo {
+  background: #fffef9;
+  border-left: 5px solid #d3ad4f;
+}
+
+.mensaje-resultado {
+  color: #2a507d;
+  font-weight: 600;
+  margin-bottom: 0.45rem;
+}
+
+.card-comparable {
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-comparable:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sombra-card);
+}
+
+.card-sugerida {
+  border-color: #8fc0ff;
+  background: linear-gradient(160deg, #f4f9ff, #eef6ff);
+}
+
+.badge-sugerida {
+  margin-bottom: 0.3rem;
+  background: #2b8eff;
+  color: #fff;
+}
+
+.ejemplo-problema {
+  margin-top: 0.5rem;
+  font-size: 0.87rem;
+}
+
 .campo {
   display: grid;
   gap: 0.35rem;

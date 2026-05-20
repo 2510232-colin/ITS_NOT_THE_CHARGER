@@ -22,3 +22,12 @@ if (selectorPaquete && textoResumenPaquete) {
     }
   });
 }
+
+const formularioBuscadorServicios = document.getElementById("form-buscador-servicios");
+const estadoAnalizando = document.getElementById("estado-analizando");
+
+if (formularioBuscadorServicios && estadoAnalizando) {
+  formularioBuscadorServicios.addEventListener("submit", () => {
+    estadoAnalizando.hidden = false;
+  });
+}

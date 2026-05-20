@@ -11,7 +11,7 @@ from app_core import (
     obtener_categorias_servicios,
     obtener_contenido_sitio,
     registrar_historial_ticket,
-    recomendar_servicios_por_palabras,
+    resolver_recomendacion_servicios_ui,
     requiere_sesion,
 )
 from db import ejecutar_consulta
@@ -73,6 +73,15 @@ def registrar_rutas_publicas(app):
         busqueda = limpiar_texto(request.args.get("q", ""))[:140]
         categorias = []
         recomendaciones = []
+        recomendacion_modo = "low"
+        recomendacion_principal = None
+        recomendaciones_comparables = []
+        recomendacion_sugerido_id = None
+        sugerencias_contexto = [
+            "¿Tu equipo muestra algún mensaje de error?",
+            "¿Es una laptop o PC?",
+            "¿El problema ocurre al encender o durante el uso?",
+        ]
 
         try:
             categorias = obtener_categorias_servicios()
@@ -88,8 +97,17 @@ def registrar_rutas_publicas(app):
                     consulta_recomendador,
                     varias_filas=True,
                 )
-                recomendaciones = recomendar_servicios_por_palabras(busqueda, catalogo_recomendador, limite=4)
+                resultado_ui = resolver_recomendacion_servicios_ui(busqueda, catalogo_recomendador, limite=4)
+                recomendaciones = resultado_ui.get("recomendaciones", [])
+                recomendacion_modo = resultado_ui.get("modo", "low")
+                recomendacion_principal = resultado_ui.get("principal")
+                recomendaciones_comparables = resultado_ui.get("comparables", [])
+                recomendacion_sugerido_id = resultado_ui.get("sugerido_id")
+                sugerencias_contexto = resultado_ui.get("sugerencias_contexto", sugerencias_contexto)
                 recomendaciones = enriquecer_servicios(recomendaciones)
+                recomendaciones_comparables = enriquecer_servicios(recomendaciones_comparables)
+                if recomendacion_principal:
+                    recomendacion_principal = enriquecer_servicios([recomendacion_principal])[0]
         except Error:
             categorias = []
             recomendaciones = []
@@ -99,6 +117,11 @@ def registrar_rutas_publicas(app):
             categorias=categorias,
             busqueda=busqueda,
             recomendaciones=recomendaciones,
+            recomendacion_modo=recomendacion_modo,
+            recomendacion_principal=recomendacion_principal,
+            recomendaciones_comparables=recomendaciones_comparables,
+            recomendacion_sugerido_id=recomendacion_sugerido_id,
+            sugerencias_contexto=sugerencias_contexto,
             seccion_activa="servicios",
         )
 

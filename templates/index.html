@@ -17,14 +17,26 @@
   <section class="seccion">
     <div class="titulo-seccion">
       <h2>¿Qué necesitas resolver hoy?</h2>
-      <a href="{{ url_for('servicios') }}" class="boton boton-outline">Ver diagnóstico guiado</a>
     </div>
-    <div class="hero-acciones">
-      <a class="boton boton-outline" href="{{ url_for('servicios', q='computadora lenta') }}">Computadora lenta</a>
-      <a class="boton boton-outline" href="{{ url_for('servicios', q='no enciende') }}">No enciende</a>
-      <a class="boton boton-outline" href="{{ url_for('servicios', q='se sobrecalienta') }}">Se sobrecalienta</a>
-      <a class="boton boton-outline" href="{{ url_for('servicios', q='quiero mejorar rendimiento') }}">Mejorar rendimiento</a>
-    </div>
+    <form method="GET" action="{{ url_for('servicios') }}" class="formulario" id="form-buscador-servicios">
+      <div class="campo">
+        <label>Cuéntanos qué problema tienes (diagnóstico guiado)</label>
+        <input type="text" name="q" maxlength="140" placeholder="Ejemplo: computadora lenta, no enciende, sobrecalienta" />
+      </div>
+      <div class="hero-acciones" style="margin-top:.3rem;">
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='computadora lenta') }}">Computadora lenta</a>
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='no enciende') }}">No enciende</a>
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='se sobrecalienta') }}">Sobrecalentamiento</a>
+        <a class="boton boton-outline" href="{{ url_for('servicios', q='quiero actualizar ram ssd') }}">Actualizar RAM/SSD</a>
+      </div>
+      <div class="hero-acciones">
+        <button type="submit" class="boton boton-primario">Obtener recomendaciones</button>
+      </div>
+      <div id="estado-analizando" class="estado-analizando" hidden>
+        <span class="spinner-carga" aria-hidden="true"></span>
+        <p>Analizando consulta… buscando la mejor opción para ti.</p>
+      </div>
+    </form>
   </section>
 
   <section class="seccion">

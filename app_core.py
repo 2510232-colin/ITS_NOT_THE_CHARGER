@@ -1,8 +1,10 @@
 import re
+import os
 
 from flask import flash, redirect, session, url_for
 from mysql.connector import Error
 
+from ai_disambiguator import desempatar_servicio_con_gemini
 from db import ejecutar_consulta
 
 
@@ -69,6 +71,7 @@ POLITICA_DOMICILIO = [
 
 MAPA_INTENCIONES = {
     "lenta": ["rendimiento", "optimizacion", "optimización", "ssd", "ram", "disco", "mantenimiento"],
+    "lento": ["rendimiento", "optimizacion", "optimización", "ssd", "ram", "disco", "mantenimiento"],
     "lentitud": ["rendimiento", "optimizacion", "optimización", "ssd", "ram", "disco", "mantenimiento"],
     "calienta": ["sobrecalentamiento", "pasta termica", "pasta térmica", "ventilador", "limpieza"],
     "sobrecalienta": ["sobrecalentamiento", "pasta termica", "pasta térmica", "ventilador", "limpieza"],
@@ -148,12 +151,17 @@ def expandir_intenciones(tokens):
     return list(resultado)
 
 
-def recomendar_servicios_por_palabras(texto, servicios_catalogo, limite=5):
+def recomendar_servicios_por_palabras_con_puntaje(texto, servicios_catalogo, limite=5):
     palabras = normalizar_palabras(texto)
     if not palabras:
         return []
 
     palabras_ext = expandir_intenciones(palabras)
+    texto_normalizado = " ".join(palabras)
+    intención_lentitud = any(token in texto_normalizado for token in ["lenta", "lento", "lentitud", "arranque", "arranca"])
+    intención_seguridad = any(token in texto_normalizado for token in ["virus", "malware", "spyware", "seguridad"])
+    intención_termica = any(token in texto_normalizado for token in ["calienta", "sobrecal", "temperatura", "ventilador"])
+    intención_armado = any(token in texto_normalizado for token in ["armar", "armado", "ensamble", "nueva pc", "pc nueva", "gamer"])
 
     resultados = []
     for servicio in servicios_catalogo:
@@ -161,6 +169,7 @@ def recomendar_servicios_por_palabras(texto, servicios_catalogo, limite=5):
         descripcion = (servicio.get("descripcion") or "").lower()
         categoria = (servicio.get("categoria") or "").lower()
         palabras_servicio = set(normalizar_palabras(servicio.get("palabras_clave") or "", max_palabras=80))
+        texto_servicio = " ".join([titulo, descripcion, categoria, " ".join(palabras_servicio)])
         puntuacion = 0
 
         for palabra in palabras_ext:
@@ -173,11 +182,131 @@ def recomendar_servicios_por_palabras(texto, servicios_catalogo, limite=5):
             if palabra in palabras_servicio:
                 puntuacion += 7
 
-        if puntuacion > 0:
-            resultados.append((puntuacion, servicio))
+        if intención_lentitud:
+            if any(token in texto_servicio for token in ["ssd", "nvme", "migración", "migracion", "hdd"]):
+                puntuacion += 18
+            if any(token in texto_servicio for token in ["ram", "memoria"]):
+                puntuacion += 10
+            if any(token in texto_servicio for token in ["upgrade", "actualización", "actualizacion", "ensamblaje"]):
+                puntuacion += 8
 
-    resultados.sort(key=lambda item: (item[0], item[1].get("titulo") or item[1].get("nombre") or ""), reverse=True)
-    return [item[1] for item in resultados[:limite]]
+            es_upgrade = "upgrade y ensamblaje" in categoria
+            es_ssd_ram_especifico = any(
+                token in titulo
+                for token in [
+                    "instalación de ssd",
+                    "instalacion de ssd",
+                    "migración de hdd a ssd",
+                    "migracion de hdd a ssd",
+                    "actualización de memoria ram",
+                    "actualizacion de memoria ram",
+                    "upgrade completo",
+                ]
+            )
+
+            if es_ssd_ram_especifico:
+                puntuacion += 35
+            elif es_upgrade:
+                puntuacion += 22
+
+            if not intención_seguridad and "seguridad y optimización" in categoria:
+                puntuacion -= 10
+            if not intención_termica and "mantenimiento preventivo y correctivo" in categoria:
+                puntuacion -= 8
+            if not intención_armado and any(token in titulo for token in ["armado", "ensamble", "personalizada"]):
+                puntuacion -= 26
+
+        if intención_armado:
+            if any(token in texto_servicio for token in ["armado", "ensamble", "personalizada", "gamer", "upgrade y ensamblaje"]):
+                puntuacion += 28
+            if "gamer" in texto_normalizado and "gamer" in titulo:
+                puntuacion += 14
+            if "seguridad y optimización" in categoria and "gamer" not in titulo:
+                puntuacion -= 12
+
+        if puntuacion > 0:
+            resultados.append({"score": puntuacion, "servicio": servicio})
+
+    resultados.sort(
+        key=lambda item: (item["score"], item["servicio"].get("titulo") or item["servicio"].get("nombre") or ""),
+        reverse=True,
+    )
+    return resultados[:limite]
+
+
+def recomendar_servicios_por_palabras(texto, servicios_catalogo, limite=5):
+    resultados = recomendar_servicios_por_palabras_con_puntaje(texto, servicios_catalogo, limite=limite)
+    return [item["servicio"] for item in resultados]
+
+
+def resolver_recomendacion_servicios_ui(texto, servicios_catalogo, limite=4):
+    resultados = recomendar_servicios_por_palabras_con_puntaje(texto, servicios_catalogo, limite=max(5, limite))
+
+    salida_base = {
+        "modo": "low",
+        "recomendaciones": [],
+        "principal": None,
+        "comparables": [],
+        "sugerido_id": None,
+        "sugerencias_contexto": [
+            "¿Tu equipo muestra algún mensaje de error?",
+            "¿Es laptop o PC de escritorio?",
+            "¿El problema ocurre al encender o durante el uso?",
+        ],
+    }
+
+    if not resultados:
+        return salida_base
+
+    recomendaciones = [item["servicio"] for item in resultados[:limite]]
+    top1 = resultados[0]["score"]
+    top2 = resultados[1]["score"] if len(resultados) > 1 else 0
+    diferencia = top1 - top2
+
+    if top1 < 8:
+        salida_base["recomendaciones"] = recomendaciones
+        return salida_base
+
+    gemini_enabled = (os.getenv("USE_GEMINI_DISAMBIGUATION") or "false").strip().lower() in {"1", "true", "yes", "on"}
+    ambiguo = len(resultados) > 1 and (top1 == top2 or diferencia <= 2 or top1 < 14)
+
+    if ambiguo:
+        sugerido_id = None
+        if gemini_enabled:
+            candidatos = []
+            for item in resultados[:5]:
+                servicio = item["servicio"]
+                candidatos.append(
+                    {
+                        "id": servicio.get("id"),
+                        "nombre": servicio.get("titulo") or servicio.get("nombre") or "",
+                        "categoria": servicio.get("categoria") or "",
+                        "descripcion": servicio.get("descripcion") or "",
+                        "palabras_clave": servicio.get("palabras_clave") or "",
+                        "score_heuristico": item["score"],
+                    }
+                )
+            sugerido_id = desempatar_servicio_con_gemini(texto, candidatos)
+
+        comparables = [item["servicio"] for item in resultados[:3]]
+        salida_base.update(
+            {
+                "modo": "ambiguo",
+                "recomendaciones": recomendaciones,
+                "comparables": comparables,
+                "sugerido_id": sugerido_id,
+            }
+        )
+        return salida_base
+
+    salida_base.update(
+        {
+            "modo": "alta",
+            "recomendaciones": recomendaciones,
+            "principal": resultados[0]["servicio"],
+        }
+    )
+    return salida_base
 
 
 def calcular_estimado_referencial(servicio):
@@ -612,6 +741,35 @@ def asegurar_modelo_tickets():
                 'Cancelado'
             ) NOT NULL DEFAULT 'Pendiente'
             """,
+            confirmar=True,
+        )
+    except Error:
+        return False
+    return True
+
+
+def asegurar_modelo_servicios():
+    try:
+        if not _columna_existe_tabla("servicios", "sintomas_comunes"):
+            ejecutar_consulta(
+                "ALTER TABLE servicios ADD COLUMN sintomas_comunes TEXT NULL",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("servicios", "problemas_relacionados"):
+            ejecutar_consulta(
+                "ALTER TABLE servicios ADD COLUMN problemas_relacionados TEXT NULL",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("servicios", "prioridad"):
+            ejecutar_consulta(
+                "ALTER TABLE servicios ADD COLUMN prioridad TINYINT UNSIGNED NOT NULL DEFAULT 3",
+                confirmar=True,
+            )
+
+        ejecutar_consulta(
+            "UPDATE servicios SET prioridad = 3 WHERE prioridad IS NULL OR prioridad < 1 OR prioridad > 5",
             confirmar=True,
         )
     except Error:

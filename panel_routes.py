@@ -8,6 +8,7 @@ from app_core import (
     ESTADOS_SOLICITUD,
     ESTADOS_PEDIDO,
     ESTADOS_TICKET,
+    asegurar_modelo_servicios,
     asegurar_modelo_tickets,
     cambiar_estado_ticket,
     convertir_ticket_a_orden,
@@ -29,6 +30,9 @@ from app_core import (
 from db import ejecutar_consulta
 from validaciones import (
     limpiar_texto,
+    normalizar_prioridad,
+    validar_lista_csv,
+    validar_prioridad_rango,
     validar_contrasena,
     validar_correo,
     validar_nombre,
@@ -255,6 +259,8 @@ def registrar_rutas_panel(app):
         if acceso:
             return acceso
 
+        asegurar_modelo_servicios()
+
         if request.method == "POST":
             accion = limpiar_texto(request.form.get("accion"))
             id_item = limpiar_texto(request.form.get("id_item"))
@@ -276,6 +282,9 @@ def registrar_rutas_panel(app):
             categoria = limpiar_texto(request.form.get("categoria"))
             precio = limpiar_texto(request.form.get("precio"))
             palabras_clave = limpiar_texto(request.form.get("palabras_clave"))
+            sintomas_comunes = limpiar_texto(request.form.get("sintomas_comunes"))
+            problemas_relacionados = limpiar_texto(request.form.get("problemas_relacionados"))
+            prioridad = normalizar_prioridad(request.form.get("prioridad"))
             destacado_inicio = 1 if request.form.get("destacado_inicio") == "on" else 0
             promocion_activa = 1 if request.form.get("promocion_activa") == "on" else 0
             promocion_texto = limpiar_texto(request.form.get("promocion_texto"))
@@ -302,11 +311,25 @@ def registrar_rutas_panel(app):
                     flash(error, "error")
                     return redirect(url_for("admin_servicios"))
 
-            if palabras_clave:
-                ok, error = validar_texto_seguro(palabras_clave, "palabras clave", 3, 500)
-                if not ok:
-                    flash(error, "error")
-                    return redirect(url_for("admin_servicios"))
+            ok, error, palabras_clave = validar_lista_csv(palabras_clave, "palabras clave", 500)
+            if not ok:
+                flash(error, "error")
+                return redirect(url_for("admin_servicios"))
+
+            ok, error, sintomas_comunes = validar_lista_csv(sintomas_comunes, "síntomas comunes", 1200)
+            if not ok:
+                flash(error, "error")
+                return redirect(url_for("admin_servicios"))
+
+            ok, error, problemas_relacionados = validar_lista_csv(problemas_relacionados, "problemas relacionados", 1200)
+            if not ok:
+                flash(error, "error")
+                return redirect(url_for("admin_servicios"))
+
+            ok, error, prioridad = validar_prioridad_rango(prioridad)
+            if not ok:
+                flash(error, "error")
+                return redirect(url_for("admin_servicios"))
 
             if promocion_activa and not promocion_texto:
                 flash("Si activas promoción debes escribir su descripción.", "error")
@@ -322,6 +345,9 @@ def registrar_rutas_panel(app):
                             descripcion = %s,
                             precio = %s,
                             palabras_clave = %s,
+                            sintomas_comunes = %s,
+                            problemas_relacionados = %s,
+                            prioridad = %s,
                             destacado_inicio = %s,
                             orden_destacado = %s,
                             promocion_activa = %s,
@@ -333,7 +359,10 @@ def registrar_rutas_panel(app):
                             categoria,
                             descripcion,
                             precio_num,
-                            palabras_clave,
+                            palabras_clave or None,
+                            sintomas_comunes or None,
+                            problemas_relacionados or None,
+                            prioridad,
                             destacado_inicio,
                             orden_destacado_num,
                             promocion_activa,
@@ -351,17 +380,21 @@ def registrar_rutas_panel(app):
                         """
                         INSERT INTO servicios (
                             categoria, nombre, descripcion, precio,
-                            palabras_clave, destacado_inicio, orden_destacado,
+                            palabras_clave, sintomas_comunes, problemas_relacionados, prioridad,
+                            destacado_inicio, orden_destacado,
                             promocion_activa, promocion_texto, activo
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 1)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1)
                         """,
                         (
                             categoria,
                             nombre,
                             descripcion,
                             precio_num,
-                            palabras_clave,
+                            palabras_clave or None,
+                            sintomas_comunes or None,
+                            problemas_relacionados or None,
+                            prioridad,
                             destacado_inicio,
                             orden_destacado_num,
                             promocion_activa,
@@ -381,6 +414,7 @@ def registrar_rutas_panel(app):
         try:
             consulta = """
                 SELECT id, categoria, nombre, descripcion, precio, palabras_clave,
+                       sintomas_comunes, problemas_relacionados, prioridad,
                        destacado_inicio, orden_destacado, promocion_activa, promocion_texto
                 FROM servicios
             """
@@ -401,6 +435,7 @@ def registrar_rutas_panel(app):
                 servicio_edicion = ejecutar_consulta(
                     """
                     SELECT id, categoria, nombre, descripcion, precio, palabras_clave,
+                          sintomas_comunes, problemas_relacionados, prioridad,
                            destacado_inicio, orden_destacado, promocion_activa, promocion_texto
                     FROM servicios
                     WHERE id = %s

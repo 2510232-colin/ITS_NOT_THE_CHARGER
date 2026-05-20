@@ -30,6 +30,9 @@
       </div>
       <div class="campo"><label>Precio base</label><input type="number" step="0.01" name="precio" value="{{ servicio_edicion.precio if servicio_edicion else '' }}" required /></div>
       <div class="campo"><label>Palabras clave (separadas por coma)</label><input type="text" name="palabras_clave" value="{{ servicio_edicion.palabras_clave if servicio_edicion else '' }}" placeholder="lenta, ram, ssd, optimización, sobrecalienta" /></div>
+      <div class="campo"><label>Síntomas comunes (CSV)</label><input type="text" name="sintomas_comunes" value="{{ servicio_edicion.sintomas_comunes if servicio_edicion else '' }}" placeholder="caliente, se apaga, ventiladores fuertes" /></div>
+      <div class="campo"><label>Problemas relacionados (CSV)</label><input type="text" name="problemas_relacionados" value="{{ servicio_edicion.problemas_relacionados if servicio_edicion else '' }}" placeholder="sobrecalentamiento, pasta térmica, polvo" /></div>
+      <div class="campo"><label>Prioridad (1-5)</label><input type="number" name="prioridad" value="{{ servicio_edicion.prioridad if servicio_edicion and servicio_edicion.prioridad else 3 }}" min="1" max="5" /></div>
       <div class="campo"><label>Descripción</label><textarea name="descripcion" required>{{ servicio_edicion.descripcion if servicio_edicion else '' }}</textarea></div>
       <div class="rejilla rejilla-2">
         <div class="campo"><label>Orden en destacados</label><input type="number" name="orden_destacado" value="{{ servicio_edicion.orden_destacado if servicio_edicion else 0 }}" min="0" /></div>
@@ -62,12 +65,15 @@
     </form>
 
     <table class="tabla" style="margin-top:.8rem;">
-      <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Inicio</th><th>Promoción</th><th>Acciones</th></tr>
+      <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Prioridad</th><th>Síntomas comunes</th><th>Problemas relacionados</th><th>Inicio</th><th>Promoción</th><th>Acciones</th></tr>
       {% for servicio in servicios %}
         <tr>
           <td>{{ servicio.nombre }}</td>
           <td>{{ servicio.categoria }}</td>
           <td>${{ '%.2f'|format(servicio.precio) }}</td>
+          <td>{{ servicio.prioridad if servicio.prioridad else 3 }}</td>
+          <td>{{ servicio.sintomas_comunes if servicio.sintomas_comunes else '—' }}</td>
+          <td>{{ servicio.problemas_relacionados if servicio.problemas_relacionados else '—' }}</td>
           <td>{{ 'Sí' if servicio.destacado_inicio else 'No' }}</td>
           <td>{{ servicio.promocion_texto if servicio.promocion_activa else 'No activa' }}</td>
           <td class="celda-acciones">
@@ -80,7 +86,7 @@
           </td>
         </tr>
       {% else %}
-        <tr><td colspan="6">Sin servicios registrados.</td></tr>
+        <tr><td colspan="9">Sin servicios registrados.</td></tr>
       {% endfor %}
     </table>
   </article>
