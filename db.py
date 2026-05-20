@@ -60,7 +60,12 @@ def ejecutar_consulta(sql, parametros=None, una_fila=False, varias_filas=False, 
             return cursor.fetchall()
 
         return None
-    except Error:
+    except Error as error:
+        host = os.getenv("MYSQL_HOST", "127.0.0.1")
+        port = os.getenv("MYSQL_PORT", "3306")
+        database = os.getenv("MYSQL_DATABASE", "techcare_db")
+        ssl_mode = os.getenv("MYSQL_SSL_MODE", "DISABLED")
+        print(f"[DB ERROR] host={host} port={port} db={database} ssl={ssl_mode} error={error}")
         if conexion and confirmar:
             conexion.rollback()
         raise
