@@ -14,8 +14,8 @@
     <form method="POST" action="{{ url_for('admin_usuarios') }}" class="formulario" style="margin-top:.8rem;">
       <input type="hidden" name="accion" value="crear" />
       <div class="rejilla rejilla-2">
-        <div class="campo"><label>Correo</label><input type="email" name="correo" required /></div>
-        <div class="campo"><label>Teléfono</label><input type="text" name="numero" maxlength="10" required /></div>
+        <div class="campo"><label>Correo electrónico</label><input type="email" name="correo" placeholder="correo@ejemplo.com" autocomplete="email" inputmode="email" required /></div>
+        <div class="campo"><label>Teléfono</label><input type="text" name="numero" maxlength="10" inputmode="numeric" pattern="\d{10}" placeholder="10 dígitos" required /></div>
       </div>
       <div class="rejilla rejilla-2">
         <div class="campo"><label>Contraseña inicial</label><input type="password" name="contrasena" required /></div>

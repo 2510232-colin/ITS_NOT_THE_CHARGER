@@ -53,6 +53,29 @@ CATEGORIAS_SERVICIO = [
     "Servicios empresariales",
 ]
 
+TIPOS_PROMOCION = {
+    "porcentaje": "Descuento por porcentaje",
+    "monto": "Descuento fijo",
+    "dos_por_uno": "2x1",
+    "texto": "Texto libre",
+}
+
+
+def construir_texto_promocion(tipo, valor=None, detalle=""):
+    detalle = limpiar_texto(detalle)
+    if tipo == "porcentaje" and valor is not None:
+        base = f"{int(valor) if float(valor).is_integer() else float(valor):g}% de descuento"
+        return f"{base} {detalle}".strip()
+    if tipo == "monto" and valor is not None:
+        base = f"${float(valor):.2f} MXN de descuento"
+        return f"{base} {detalle}".strip()
+    if tipo == "dos_por_uno":
+        base = "Promoción 2x1"
+        return f"{base} {detalle}".strip()
+    if tipo == "texto":
+        return detalle
+    return detalle
+
 
 def registrar_rutas_panel(app):
     asegurar_modelo_tickets()
@@ -288,6 +311,9 @@ def registrar_rutas_panel(app):
             destacado_inicio = 1 if request.form.get("destacado_inicio") == "on" else 0
             promocion_activa = 1 if request.form.get("promocion_activa") == "on" else 0
             promocion_texto = limpiar_texto(request.form.get("promocion_texto"))
+            promocion_tipo = limpiar_texto(request.form.get("promocion_tipo"))
+            promocion_detalle = limpiar_texto(request.form.get("promocion_detalle"))
+            promocion_valor = limpiar_texto(request.form.get("promocion_valor"))
             orden_destacado = limpiar_texto(request.form.get("orden_destacado")) or "0"
 
             if not all([nombre, descripcion, categoria, precio]):
@@ -304,6 +330,14 @@ def registrar_rutas_panel(app):
             except ValueError:
                 flash("Precio u orden de destacado inválidos.", "error")
                 return redirect(url_for("admin_servicios"))
+
+            promocion_valor_num = None
+            if promocion_valor:
+                try:
+                    promocion_valor_num = float(promocion_valor)
+                except ValueError:
+                    flash("El valor de promoción es inválido.", "error")
+                    return redirect(url_for("admin_servicios"))
 
             for valor, etiqueta in ((nombre, "nombre"), (categoria, "categoría"), (descripcion, "descripción")):
                 ok, error = validar_texto_seguro(valor, etiqueta, 2, 2000)
@@ -331,9 +365,33 @@ def registrar_rutas_panel(app):
                 flash(error, "error")
                 return redirect(url_for("admin_servicios"))
 
-            if promocion_activa and not promocion_texto:
-                flash("Si activas promoción debes escribir su descripción.", "error")
-                return redirect(url_for("admin_servicios"))
+            if promocion_activa:
+                if promocion_tipo and promocion_tipo not in TIPOS_PROMOCION:
+                    flash("Selecciona un tipo de promoción válido.", "error")
+                    return redirect(url_for("admin_servicios"))
+
+                if promocion_tipo in ["porcentaje", "monto"] and promocion_valor_num is None:
+                    flash("Debes indicar un valor para la promoción seleccionada.", "error")
+                    return redirect(url_for("admin_servicios"))
+
+                if promocion_tipo == "texto" and not promocion_detalle and not promocion_texto:
+                    flash("Debes escribir el texto de la promoción.", "error")
+                    return redirect(url_for("admin_servicios"))
+
+                promocion_texto = construir_texto_promocion(
+                    promocion_tipo,
+                    promocion_valor_num,
+                    promocion_detalle or promocion_texto,
+                )
+
+                if not promocion_texto:
+                    flash("No fue posible construir el texto de la promoción.", "error")
+                    return redirect(url_for("admin_servicios"))
+            else:
+                promocion_tipo = None
+                promocion_valor_num = None
+                promocion_detalle = ""
+                promocion_texto = ""
 
             if accion == "editar" and id_item.isdigit():
                 try:
@@ -348,6 +406,9 @@ def registrar_rutas_panel(app):
                             sintomas_comunes = %s,
                             problemas_relacionados = %s,
                             prioridad = %s,
+                            promocion_tipo = %s,
+                            promocion_valor = %s,
+                            promocion_detalle = %s,
                             destacado_inicio = %s,
                             orden_destacado = %s,
                             promocion_activa = %s,
@@ -363,6 +424,9 @@ def registrar_rutas_panel(app):
                             sintomas_comunes or None,
                             problemas_relacionados or None,
                             prioridad,
+                            promocion_tipo,
+                            promocion_valor_num,
+                            promocion_detalle or None,
                             destacado_inicio,
                             orden_destacado_num,
                             promocion_activa,
@@ -381,10 +445,11 @@ def registrar_rutas_panel(app):
                         INSERT INTO servicios (
                             categoria, nombre, descripcion, precio,
                             palabras_clave, sintomas_comunes, problemas_relacionados, prioridad,
+                            promocion_tipo, promocion_valor, promocion_detalle,
                             destacado_inicio, orden_destacado,
                             promocion_activa, promocion_texto, activo
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1)
                         """,
                         (
                             categoria,
@@ -395,6 +460,9 @@ def registrar_rutas_panel(app):
                             sintomas_comunes or None,
                             problemas_relacionados or None,
                             prioridad,
+                            promocion_tipo,
+                            promocion_valor_num,
+                            promocion_detalle or None,
                             destacado_inicio,
                             orden_destacado_num,
                             promocion_activa,
@@ -415,6 +483,7 @@ def registrar_rutas_panel(app):
             consulta = """
                 SELECT id, categoria, nombre, descripcion, precio, palabras_clave,
                        sintomas_comunes, problemas_relacionados, prioridad,
+                      promocion_tipo, promocion_valor, promocion_detalle,
                        destacado_inicio, orden_destacado, promocion_activa, promocion_texto
                 FROM servicios
             """
@@ -436,6 +505,7 @@ def registrar_rutas_panel(app):
                     """
                     SELECT id, categoria, nombre, descripcion, precio, palabras_clave,
                           sintomas_comunes, problemas_relacionados, prioridad,
+                          promocion_tipo, promocion_valor, promocion_detalle,
                            destacado_inicio, orden_destacado, promocion_activa, promocion_texto
                     FROM servicios
                     WHERE id = %s
@@ -454,6 +524,7 @@ def registrar_rutas_panel(app):
             servicio_edicion=servicio_edicion,
             filtro_q=filtro_q,
             categorias_servicio=CATEGORIAS_SERVICIO,
+            tipos_promocion=TIPOS_PROMOCION,
         )
 
     @app.route("/panel/admin/pedidos", methods=["GET", "POST"])
@@ -828,7 +899,7 @@ def registrar_rutas_panel(app):
                        COUNT(tm.id) AS total_mensajes
                 FROM tickets t
                 INNER JOIN usuarios u ON u.id = t.id_usuario
-                LEFT JOIN ticket_mensajes tm ON tm.id_ticket = t.id
+                INNER JOIN ticket_mensajes tm ON tm.id_ticket = t.id
                 GROUP BY t.id, t.folio, t.estado, cliente
                 ORDER BY t.id DESC
                 """,
@@ -843,6 +914,37 @@ def registrar_rutas_panel(app):
             "panel_contactos.html",
             mensajes=mensajes,
             chats=chats,
+            titulo_panel="INTC Contactos",
+        )
+
+    @app.route("/panel/contactos/<int:id_contacto>")
+    def panel_contacto_detalle(id_contacto):
+        acceso = verificar_acceso_operativo()
+        if acceso:
+            return acceso
+
+        try:
+            contacto = ejecutar_consulta(
+                """
+                SELECT id, nombre, correo, mensaje, atendido,
+                       DATE_FORMAT(fecha_creacion, '%d/%m/%Y %H:%i') AS fecha
+                FROM contactos
+                WHERE id = %s
+                LIMIT 1
+                """,
+                (id_contacto,),
+                una_fila=True,
+            )
+        except Error:
+            contacto = None
+
+        if not contacto:
+            flash("No se encontró el mensaje solicitado.", "error")
+            return redirect(url_for("panel_contactos"))
+
+        return render_template(
+            "panel_contacto_detalle.html",
+            contacto=contacto,
             titulo_panel="INTC Contactos",
         )
 
@@ -861,7 +963,7 @@ def registrar_rutas_panel(app):
                            COUNT(tm.id) AS total_mensajes
                     FROM tickets t
                     INNER JOIN usuarios u ON u.id = t.id_usuario
-                    LEFT JOIN ticket_mensajes tm ON tm.id_ticket = t.id
+                    INNER JOIN ticket_mensajes tm ON tm.id_ticket = t.id
                     GROUP BY t.id, t.folio, t.estado, cliente
                     ORDER BY t.id DESC
                     """,
@@ -875,7 +977,7 @@ def registrar_rutas_panel(app):
                            DATE_FORMAT(MAX(tm.fecha_creacion), '%d/%m/%Y %H:%i') AS ultima_interaccion,
                            COUNT(tm.id) AS total_mensajes
                     FROM tickets t
-                    LEFT JOIN ticket_mensajes tm ON tm.id_ticket = t.id
+                          INNER JOIN ticket_mensajes tm ON tm.id_ticket = t.id
                     WHERE t.id_usuario = %s
                     GROUP BY t.id, t.folio, t.estado
                     ORDER BY t.id DESC

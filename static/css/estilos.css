@@ -162,6 +162,8 @@ ul {
   font-weight: 600;
   font-size: 0.92rem !important;
   line-height: 1.15;
+  white-space: normal;
+  text-align: center;
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -489,6 +491,36 @@ ul {
   color: #3b4044;
 }
 
+.hero-acciones.compacta {
+  margin-top: 0.3rem;
+}
+
+.titulo-seccion.separada {
+  margin-top: 1rem;
+}
+
+.bloque-chat {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+}
+
+.chat-encabezado {
+  font-size: 0.92rem;
+}
+
+.chat-mensaje {
+  margin-top: 0.35rem;
+  color: #2a2e30;
+  overflow-wrap: anywhere;
+}
+
+.tabla .texto-wrap {
+  white-space: normal;
+  min-width: 190px;
+  overflow-wrap: anywhere;
+}
+
 .panel {
   margin-top: 1rem;
   display: grid;
@@ -702,6 +734,10 @@ ul {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+body.menu-movil-abierto {
+  overflow: hidden;
+}
+
 @media (max-width: 1180px) and (min-width: 961px) {
   .navbar .contenedor {
     width: min(1320px, 98%);
@@ -771,6 +807,15 @@ ul {
     letter-spacing: 0.55px;
   }
 
+  .logo-texto {
+    max-width: calc(100vw - 190px);
+  }
+
+  .logo-nombre {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .logo-ciudad {
     display: none;
   }
@@ -784,6 +829,9 @@ ul {
     display: none;
     flex-direction: column;
     align-items: stretch;
+    max-height: calc(100vh - 74px);
+    overflow-y: auto;
+    z-index: 120;
   }
 
   .menu-principal.abierto {
@@ -792,6 +840,11 @@ ul {
 
   .enlace-menu-accion-movil {
     display: inline-flex;
+  }
+
+  .enlace-menu {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .acciones-nav {
@@ -829,6 +882,11 @@ ul {
   .tabla {
     display: block;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabla th,
+  .tabla td {
     white-space: nowrap;
   }
 
@@ -853,5 +911,52 @@ ul {
 
   .formulario .boton {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .contenedor {
+    width: min(1120px, 94%);
+  }
+
+  .navbar-contenido {
+    min-height: 64px;
+  }
+
+  .menu-principal {
+    inset: 64px 0 auto 0;
+    max-height: calc(100vh - 64px);
+  }
+
+  .hero {
+    padding: 1.35rem;
+  }
+
+  .titulo-seccion {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-acciones {
+    gap: 0.5rem;
+  }
+
+  .hero-acciones .boton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .logo-texto {
+    display: none;
+  }
+
+  .logo-icono {
+    height: 50px;
+    max-height: 50px;
+  }
+
+  .seccion {
+    padding: 0.95rem;
   }
 }

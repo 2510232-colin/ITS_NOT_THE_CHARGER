@@ -16,7 +16,7 @@
       {% for chat in chats %}
         <tr>
           <td>{{ chat.folio }}</td>
-          <td>{{ chat.cliente }}</td>
+          <td class="texto-wrap">{{ chat.cliente }}</td>
           <td>
             <span class="estado {% if chat.estado in ['Pendiente', 'Validado', 'Agendado'] %}revision{% elif chat.estado in ['En diagnóstico', 'Esperando aprobación', 'En reparación'] %}proceso{% elif chat.estado == 'Cancelado' %}cancelado{% else %}listo{% endif %}">
               {{ chat.estado }}
@@ -35,14 +35,14 @@
   <article class="seccion">
     <h2>Mensajes web (formulario contacto)</h2>
     <table class="tabla" style="margin-top:.8rem;">
-      <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Mensaje</th><th>Estado</th><th>Acción</th></tr>
+      <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Estado</th><th>Detalle</th><th>Acción</th></tr>
       {% for item in mensajes %}
         <tr>
           <td>{{ item.fecha }}</td>
-          <td>{{ item.nombre }}</td>
-          <td>{{ item.correo }}</td>
-          <td class="columna-mensaje">{{ item.mensaje }}</td>
+          <td class="texto-wrap">{{ item.nombre }}</td>
+          <td class="texto-wrap">{{ item.correo }}</td>
           <td>{% if item.atendido %}<span class="badge">Atendido</span>{% else %}<span class="estado revision">Pendiente</span>{% endif %}</td>
+          <td><a class="boton boton-outline" href="{{ url_for('panel_contacto_detalle', id_contacto=item.id) }}">Ver mensaje</a></td>
           <td>
             <form method="POST" action="{{ url_for('panel_contactos') }}" class="acciones-tabla-inline">
               <input type="hidden" name="id_contacto" value="{{ item.id }}" />

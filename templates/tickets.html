@@ -15,7 +15,7 @@
       {% for ticket in solicitudes %}
         <tr>
           <td>{{ ticket.folio }}</td>
-          <td>{{ ticket.servicio }}</td>
+          <td class="texto-wrap">{{ ticket.servicio }}</td>
           <td>{{ ticket.precio_estimado_lista }}</td>
           <td>{{ ticket.fecha }}</td>
           <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
@@ -61,7 +61,7 @@
       {% for ticket in ordenes_activas %}
         <tr>
           <td>{{ ticket.folio }}</td>
-          <td>{{ ticket.servicio }}</td>
+          <td class="texto-wrap">{{ ticket.servicio }}</td>
           <td>{{ ticket.precio_estimado_lista }}</td>
           <td>{{ ticket.fecha }}</td>
           <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>
@@ -97,7 +97,7 @@
       {% for ticket in trabajos_finalizados %}
         <tr>
           <td>{{ ticket.folio }}</td>
-          <td>{{ ticket.servicio }}</td>
+          <td class="texto-wrap">{{ ticket.servicio }}</td>
           <td>{{ ticket.precio_estimado_lista }}</td>
           <td>{{ ticket.fecha }}</td>
           <td><span class="estado {{ ticket.clase_estado }}">{{ ticket.estado }}</span></td>

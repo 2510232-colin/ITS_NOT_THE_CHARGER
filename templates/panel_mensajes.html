@@ -15,7 +15,7 @@
       {% for chat in chats %}
         <tr>
           <td>{{ chat.folio }}</td>
-          <td>{{ chat.cliente }}</td>
+          <td class="texto-wrap">{{ chat.cliente }}</td>
           <td>
             <span class="estado {% if chat.estado in ['Pendiente', 'Validado', 'Agendado'] %}revision{% elif chat.estado in ['En diagnóstico', 'Esperando aprobación', 'En reparación'] %}proceso{% elif chat.estado == 'Cancelado' %}cancelado{% else %}listo{% endif %}">
               {{ chat.estado }}

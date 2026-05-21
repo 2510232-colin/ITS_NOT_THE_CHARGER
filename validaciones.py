@@ -64,6 +64,8 @@ def normalizar_prioridad(valor, predeterminado=3, minimo=1, maximo=5):
 
 def validar_correo(correo):
     correo_limpio = limpiar_texto(correo).lower()
+    if re.fullmatch(r"\d{7,15}", correo_limpio or ""):
+        return False, "Debes capturar un correo electrónico válido, no un número telefónico."
     if not PATRON_CORREO.match(correo_limpio):
         return False, "El correo no tiene un formato válido."
     return True, ""

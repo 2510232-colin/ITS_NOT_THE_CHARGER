@@ -549,7 +549,8 @@ def obtener_historial_ticket(id_ticket):
             """
             SELECT h.id, h.estado_anterior, h.estado_nuevo, h.comentario,
                    DATE_FORMAT(h.fecha_creacion, '%d/%m/%Y %H:%i') AS fecha,
-                   COALESCE(u.nombres, 'Sistema') AS actor
+                   COALESCE(u.nombres, 'Sistema') AS actor,
+                   COALESCE(u.rol, 'sistema') AS actor_rol
             FROM ticket_historial h
             LEFT JOIN usuarios u ON u.id = h.id_usuario
             WHERE h.id_ticket = %s
@@ -765,6 +766,24 @@ def asegurar_modelo_servicios():
         if not _columna_existe_tabla("servicios", "prioridad"):
             ejecutar_consulta(
                 "ALTER TABLE servicios ADD COLUMN prioridad TINYINT UNSIGNED NOT NULL DEFAULT 3",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("servicios", "promocion_tipo"):
+            ejecutar_consulta(
+                "ALTER TABLE servicios ADD COLUMN promocion_tipo VARCHAR(30) NULL",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("servicios", "promocion_valor"):
+            ejecutar_consulta(
+                "ALTER TABLE servicios ADD COLUMN promocion_valor DECIMAL(10,2) NULL",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("servicios", "promocion_detalle"):
+            ejecutar_consulta(
+                "ALTER TABLE servicios ADD COLUMN promocion_detalle VARCHAR(200) NULL",
                 confirmar=True,
             )
 

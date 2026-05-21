@@ -23,7 +23,7 @@
         <label>Cuéntanos qué problema tienes (diagnóstico guiado)</label>
         <input type="text" name="q" maxlength="140" placeholder="Ejemplo: computadora lenta, no enciende, sobrecalienta" />
       </div>
-      <div class="hero-acciones" style="margin-top:.3rem;">
+      <div class="hero-acciones compacta">
         <a class="boton boton-outline" href="{{ url_for('servicios', q='computadora lenta') }}">Computadora lenta</a>
         <a class="boton boton-outline" href="{{ url_for('servicios', q='no enciende') }}">No enciende</a>
         <a class="boton boton-outline" href="{{ url_for('servicios', q='se sobrecalienta') }}">Sobrecalentamiento</a>

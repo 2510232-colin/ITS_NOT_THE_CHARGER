@@ -4,6 +4,21 @@ const menuPrincipal = document.getElementById("menu-principal");
 if (botonMenuMovil && menuPrincipal) {
   botonMenuMovil.addEventListener("click", () => {
     menuPrincipal.classList.toggle("abierto");
+    document.body.classList.toggle("menu-movil-abierto", menuPrincipal.classList.contains("abierto"));
+  });
+
+  menuPrincipal.querySelectorAll("a").forEach((enlace) => {
+    enlace.addEventListener("click", () => {
+      menuPrincipal.classList.remove("abierto");
+      document.body.classList.remove("menu-movil-abierto");
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 960 && menuPrincipal.classList.contains("abierto")) {
+      menuPrincipal.classList.remove("abierto");
+      document.body.classList.remove("menu-movil-abierto");
+    }
   });
 }
 

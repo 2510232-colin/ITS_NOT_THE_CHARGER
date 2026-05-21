@@ -1,0 +1,35 @@
+{% extends "base_panel.html" %}
+{% set panel_activo = 'contactos' %}
+
+{% block titulo %}INTC | Detalle de contacto{% endblock %}
+
+{% block menu_lateral %}
+  {% include "menu_lateral_unificado.html" %}
+{% endblock %}
+
+{% block contenido_panel %}
+  <article class="seccion">
+    <div class="titulo-seccion">
+      <h2>Mensaje de contacto</h2>
+      <span class="badge">{{ 'Atendido' if contacto.atendido else 'Pendiente' }}</span>
+    </div>
+    <div class="rejilla rejilla-2" style="margin-top:.7rem;">
+      <article class="card"><h3>Nombre</h3><p>{{ contacto.nombre }}</p></article>
+      <article class="card"><h3>Correo</h3><p>{{ contacto.correo }}</p></article>
+      <article class="card"><h3>Fecha</h3><p>{{ contacto.fecha }}</p></article>
+      <article class="card"><h3>Estado</h3><p>{{ 'Atendido' if contacto.atendido else 'Pendiente' }}</p></article>
+    </div>
+    <article class="card" style="margin-top:.9rem;">
+      <h3>Contenido del mensaje</h3>
+      <p>{{ contacto.mensaje }}</p>
+    </article>
+    <div class="hero-acciones">
+      <a class="boton boton-outline" href="{{ url_for('panel_contactos') }}">Volver a bandeja</a>
+      <form method="POST" action="{{ url_for('panel_contactos') }}">
+        <input type="hidden" name="id_contacto" value="{{ contacto.id }}" />
+        <input type="hidden" name="atendido" value="{{ 0 if contacto.atendido else 1 }}" />
+        <button type="submit" class="boton boton-primario">{{ 'Marcar pendiente' if contacto.atendido else 'Marcar atendido' }}</button>
+      </form>
+    </div>
+  </article>
+{% endblock %}
