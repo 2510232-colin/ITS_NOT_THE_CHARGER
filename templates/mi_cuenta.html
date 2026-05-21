@@ -24,13 +24,6 @@
         <p>Consulta el estado y trazabilidad de tus tickets.</p>
         <a class="boton boton-outline" href="{{ url_for('tickets') }}">Ir a tickets</a>
       </article>
-      {% if usuario_actual.rol == 'cliente' %}
-        <article class="card">
-          <h3>Mis pedidos</h3>
-          <p>Visualiza tus pedidos y su estado actual.</p>
-          <a class="boton boton-outline" href="{{ url_for('cliente_pedidos') }}">Ir a pedidos</a>
-        </article>
-      {% endif %}
       {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
         <article class="card">
           <h3>Mensajes de contacto</h3>
@@ -40,7 +33,7 @@
       {% endif %}
       <article class="card">
         <h3>Ver sitio público</h3>
-        <p>Regresa a inicio, servicios y productos como visitante autenticado.</p>
+        <p>Regresa a inicio y servicios como visitante autenticado.</p>
         <a class="boton boton-outline" href="{{ url_for('inicio') }}">Ir al sitio</a>
       </article>
       <article class="card">

@@ -206,27 +206,13 @@ def registrar_rutas_publicas(app):
 
     @app.route("/productos")
     def productos():
-        try:
-            productos_lista = ejecutar_consulta(
-                "SELECT id, nombre AS titulo, descripcion, precio FROM productos WHERE activo = 1 ORDER BY id DESC",
-                varias_filas=True,
-            )
-        except Error:
-            productos_lista = []
-
-        return render_template("productos.html", productos=productos_lista, seccion_activa="productos")
+        flash("La sección de venta de componentes está temporalmente oculta.", "error")
+        return redirect(url_for("servicios"))
 
     @app.route("/productos/detalle")
     def producto_detalle():
-        try:
-            producto = ejecutar_consulta(
-                "SELECT id, nombre AS titulo, descripcion, precio FROM productos WHERE activo = 1 ORDER BY id DESC LIMIT 1",
-                una_fila=True,
-            )
-        except Error:
-            producto = None
-
-        return render_template("producto_detalle.html", producto=producto, seccion_activa="productos")
+        flash("La sección de venta de componentes está temporalmente oculta.", "error")
+        return redirect(url_for("servicios"))
 
     @app.route("/nosotros")
     def nosotros():
@@ -364,7 +350,8 @@ def registrar_rutas_publicas(app):
 
     @app.route("/carrito")
     def carrito():
-        return render_template("carrito.html", seccion_activa="productos")
+        flash("La sección de venta de componentes está temporalmente oculta.", "error")
+        return redirect(url_for("servicios"))
 
     @app.route("/mi-cuenta")
     def mi_cuenta():
@@ -380,12 +367,12 @@ def registrar_rutas_publicas(app):
             "index": "inicio",
             "servicios": "servicios",
             "servicio_detalle": "servicio_detalle",
-            "productos": "productos",
-            "producto_detalle": "producto_detalle",
+            "productos": "servicios",
+            "producto_detalle": "servicios",
             "nosotros": "nosotros",
             "contacto": "contacto",
             "cotizacion": "cotizacion",
-            "carrito": "carrito",
+            "carrito": "servicios",
             "login": "login",
             "registro": "registro",
             "cliente_dashboard": "cliente_dashboard",

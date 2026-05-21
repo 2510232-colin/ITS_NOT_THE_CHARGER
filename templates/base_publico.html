@@ -21,7 +21,6 @@
       <nav id="menu-principal" class="menu-principal">
         <a class="enlace-menu {% if seccion_activa == 'inicio' %}activo{% endif %}" href="{{ url_for('inicio') }}">Inicio</a>
         <a class="enlace-menu {% if seccion_activa == 'servicios' %}activo{% endif %}" href="{{ url_for('servicios') }}">Servicios</a>
-        <a class="enlace-menu {% if seccion_activa == 'productos' %}activo{% endif %}" href="{{ url_for('productos') }}">Productos</a>
         <a class="enlace-menu {% if seccion_activa == 'nosotros' %}activo{% endif %}" href="{{ url_for('nosotros') }}">Nosotros</a>
         <a class="enlace-menu {% if seccion_activa == 'contacto' %}activo{% endif %}" href="{{ url_for('contacto') }}">Contacto</a>
         {% if usuario_actual.id %}

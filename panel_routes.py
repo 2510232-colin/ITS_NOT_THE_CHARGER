@@ -80,6 +80,8 @@ def construir_texto_promocion(tipo, valor=None, detalle=""):
 def registrar_rutas_panel(app):
     asegurar_modelo_tickets()
 
+    mensaje_modulo_oculto = "El módulo de venta de componentes está temporalmente oculto."
+
     @app.route("/panel/cliente")
     def cliente_dashboard():
         if not requiere_sesion():
@@ -90,27 +92,11 @@ def registrar_rutas_panel(app):
             return redirect(redireccion_por_rol(session.get("rol", "cliente")))
 
         tickets = obtener_tickets_usuario()
-        try:
-            total_pedidos = ejecutar_consulta(
-                "SELECT COUNT(*) AS total FROM pedidos WHERE id_usuario = %s",
-                (session.get("usuario_id"),),
-                una_fila=True,
-            )["total"]
-            compras_entregadas = ejecutar_consulta(
-                "SELECT COUNT(*) AS total FROM pedidos WHERE id_usuario = %s AND estado = 'Entregado'",
-                (session.get("usuario_id"),),
-                una_fila=True,
-            )["total"]
-        except Error:
-            total_pedidos = 0
-            compras_entregadas = 0
 
         return render_template(
             "cliente_dashboard.html",
             tickets=tickets,
             total_tickets=len(tickets),
-            total_pedidos=total_pedidos,
-            compras_entregadas=compras_entregadas,
             titulo_panel="INTC Cliente",
         )
 
@@ -120,26 +106,8 @@ def registrar_rutas_panel(app):
             flash("Este módulo es exclusivo para clientes.", "error")
             return redirect(redireccion_por_rol(session.get("rol", "cliente")))
 
-        try:
-            pedidos = ejecutar_consulta(
-                """
-                SELECT id, folio, total, estado, DATE_FORMAT(fecha_creacion, '%d/%m/%Y') AS fecha
-                FROM pedidos
-                WHERE id_usuario = %s
-                ORDER BY id DESC
-                """,
-                (session.get("usuario_id"),),
-                varias_filas=True,
-            )
-        except Error:
-            pedidos = []
-            flash("No fue posible cargar tus pedidos.", "error")
-
-        return render_template(
-            "cliente_pedidos.html",
-            pedidos=pedidos,
-            titulo_panel="INTC Cliente",
-        )
+        flash(mensaje_modulo_oculto, "error")
+        return redirect(url_for("tickets"))
 
     @app.route("/panel/admin")
     def admin_dashboard():
@@ -148,25 +116,18 @@ def registrar_rutas_panel(app):
             return acceso
 
         tickets = obtener_tickets_usuario()
-        total_productos = ejecutar_consulta("SELECT COUNT(*) AS total FROM productos", una_fila=True)["total"]
         total_servicios = ejecutar_consulta("SELECT COUNT(*) AS total FROM servicios", una_fila=True)["total"]
         total_usuarios = ejecutar_consulta("SELECT COUNT(*) AS total FROM usuarios", una_fila=True)["total"]
         solicitudes_pendientes = sum(1 for item in tickets if item.get("estado") == "Pendiente")
         ordenes_activas = sum(1 for item in tickets if es_orden_activa(item))
         trabajos_finalizados = sum(1 for item in tickets if es_trabajo_finalizado(item))
-        try:
-            total_pedidos = ejecutar_consulta("SELECT COUNT(*) AS total FROM pedidos", una_fila=True)["total"]
-        except Error:
-            total_pedidos = 0
 
         return render_template(
             "admin_dashboard.html",
             tickets=tickets,
             total_tickets=len(tickets),
-            total_productos=total_productos,
             total_servicios=total_servicios,
             total_usuarios=total_usuarios,
-            total_pedidos=total_pedidos,
             solicitudes_pendientes=solicitudes_pendientes,
             ordenes_activas=ordenes_activas,
             trabajos_finalizados=trabajos_finalizados,
@@ -179,102 +140,8 @@ def registrar_rutas_panel(app):
         if acceso:
             return acceso
 
-        if request.method == "POST":
-            accion = limpiar_texto(request.form.get("accion"))
-            id_item = limpiar_texto(request.form.get("id_item"))
-
-            if accion == "eliminar" and id_item.isdigit():
-                try:
-                    ejecutar_consulta(
-                        "DELETE FROM productos WHERE id = %s",
-                        (int(id_item),),
-                        confirmar=True,
-                    )
-                    flash("Producto eliminado correctamente.", "exito")
-                except Error:
-                    flash("No fue posible eliminar el producto.", "error")
-                return redirect(url_for("admin_productos"))
-
-            nombre = limpiar_texto(request.form.get("nombre"))
-            descripcion = limpiar_texto(request.form.get("descripcion"))
-            categoria = limpiar_texto(request.form.get("categoria"))
-            precio = limpiar_texto(request.form.get("precio"))
-            stock = limpiar_texto(request.form.get("stock"))
-
-            if not all([nombre, descripcion, categoria, precio, stock]):
-                flash("Completa todos los campos del producto.", "error")
-                return redirect(url_for("admin_productos"))
-
-            try:
-                precio_num = float(precio)
-                stock_num = int(stock)
-            except ValueError:
-                flash("Precio o stock inválidos.", "error")
-                return redirect(url_for("admin_productos"))
-
-            for valor, etiqueta in ((nombre, "nombre"), (categoria, "categoría"), (descripcion, "descripción")):
-                ok, error = validar_texto_seguro(valor, etiqueta, 2, 2000)
-                if not ok:
-                    flash(error, "error")
-                    return redirect(url_for("admin_productos"))
-
-            if accion == "editar" and id_item.isdigit():
-                try:
-                    ejecutar_consulta(
-                        """
-                        UPDATE productos
-                        SET nombre = %s, descripcion = %s, precio = %s, stock = %s
-                        WHERE id = %s
-                        """,
-                        (f"[{categoria}] {nombre}", descripcion, precio_num, stock_num, int(id_item)),
-                        confirmar=True,
-                    )
-                    flash("Producto actualizado correctamente.", "exito")
-                except Error:
-                    flash("No fue posible actualizar el producto.", "error")
-            else:
-                try:
-                    ejecutar_consulta(
-                        """
-                        INSERT INTO productos (nombre, descripcion, precio, stock, activo)
-                        VALUES (%s, %s, %s, %s, 1)
-                        """,
-                        (f"[{categoria}] {nombre}", descripcion, precio_num, stock_num),
-                        confirmar=True,
-                    )
-                    flash("Producto agregado correctamente.", "exito")
-                except Error:
-                    flash("No fue posible agregar el producto.", "error")
-
-            return redirect(url_for("admin_productos"))
-
-        id_edicion = request.args.get("editar", "")
-        producto_edicion = None
-        try:
-            productos = ejecutar_consulta(
-                "SELECT id, nombre, descripcion, precio, stock FROM productos ORDER BY id DESC",
-                varias_filas=True,
-            )
-        except Error:
-            productos = []
-            flash("No fue posible cargar productos desde la base de datos.", "error")
-
-        if id_edicion.isdigit():
-            producto_edicion = next((item for item in productos if item["id"] == int(id_edicion)), None)
-            if producto_edicion and producto_edicion["nombre"].startswith("[") and "] " in producto_edicion["nombre"]:
-                categoria, nombre = producto_edicion["nombre"].split("] ", 1)
-                producto_edicion = {
-                    **producto_edicion,
-                    "categoria": categoria.replace("[", ""),
-                    "nombre": nombre,
-                }
-
-        return render_template(
-            "admin_productos.html",
-            titulo_panel="INTC Admin",
-            productos=productos,
-            producto_edicion=producto_edicion,
-        )
+        flash(mensaje_modulo_oculto, "error")
+        return redirect(url_for("admin_servicios"))
 
     @app.route("/panel/admin/servicios", methods=["GET", "POST"])
     def admin_servicios():
@@ -533,55 +400,8 @@ def registrar_rutas_panel(app):
         if acceso:
             return acceso
 
-        if request.method == "POST":
-            id_pedido = limpiar_texto(request.form.get("id_pedido"))
-            nuevo_estado = limpiar_texto(request.form.get("nuevo_estado"))
-
-            if not id_pedido.isdigit() or nuevo_estado not in ESTADOS_PEDIDO:
-                flash("Datos de pedido inválidos.", "error")
-                return redirect(url_for("admin_pedidos"))
-
-            try:
-                pedido = ejecutar_consulta(
-                    "SELECT id FROM pedidos WHERE id = %s",
-                    (int(id_pedido),),
-                    una_fila=True,
-                )
-                if not pedido:
-                    flash("El pedido indicado no existe.", "error")
-                    return redirect(url_for("admin_pedidos"))
-
-                ejecutar_consulta(
-                    "UPDATE pedidos SET estado = %s WHERE id = %s",
-                    (nuevo_estado, int(id_pedido)),
-                    confirmar=True,
-                )
-                flash("Estado del pedido actualizado correctamente.", "exito")
-            except Error:
-                flash("No fue posible actualizar el pedido.", "error")
-
-            return redirect(url_for("admin_pedidos"))
-
-        try:
-            pedidos = ejecutar_consulta(
-                """
-                SELECT p.id, p.folio, CONCAT(u.nombres, ' ', u.apellidos) AS cliente, p.total, p.estado
-                FROM pedidos p
-                INNER JOIN usuarios u ON u.id = p.id_usuario
-                ORDER BY p.id DESC
-                """,
-                varias_filas=True,
-            )
-        except Error:
-            pedidos = []
-            flash("No fue posible cargar pedidos desde base de datos.", "error")
-
-        return render_template(
-            "admin_pedidos.html",
-            titulo_panel="INTC Admin",
-            pedidos=pedidos,
-            estados_pedido=ESTADOS_PEDIDO,
-        )
+        flash(mensaje_modulo_oculto, "error")
+        return redirect(url_for("admin_servicios"))
 
     @app.route("/panel/admin/contenido", methods=["GET", "POST"])
     def admin_contenido():
