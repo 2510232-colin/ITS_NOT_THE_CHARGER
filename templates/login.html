@@ -5,7 +5,7 @@
 {% block contenido %}
   <section class="seccion seccion-form-publica compacta">
     <h2>Acceso al sistema</h2>
-    <p class="texto-suave texto-form-ayuda">Ingresa con tu cuenta para acceder a tu panel según el rol asignado.</p>
+    <p class="texto-suave texto-form-ayuda">Ingresa con el correo de tu cuenta</p>
     <form id="formulario-login" class="formulario" style="margin-top:1rem;" method="POST" action="{{ url_for('login') }}">
       <div class="campo"><label>Correo</label><input type="email" name="correo" required /></div>
       <div class="campo"><label>Contraseña</label><input type="password" name="contrasena" required /></div>
