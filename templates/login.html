@@ -11,6 +11,11 @@
       <div class="campo"><label>Contraseña</label><input type="password" name="contrasena" required /></div>
       <button class="boton boton-primario" type="submit">Ingresar</button>
     </form>
+    <div class="hero-acciones" style="margin-top:0.75rem;">
+      <button id="boton-login-google" class="boton boton-outline" type="button">Continuar con Google</button>
+    </div>
+    <p id="estado-login-google" class="texto-suave" style="margin-top:0.5rem;"></p>
     <p class="texto-form-footer">¿No tienes cuenta? <a class="enlace-accion" href="{{ url_for('registro') }}">Regístrate aquí</a></p>
   </section>
+  <script type="module" src="{{ url_for('static', filename='js/login_google.js') }}"></script>
 {% endblock %}

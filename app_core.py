@@ -676,6 +676,22 @@ def _columna_existe_tabla(tabla, columna):
         return False
 
 
+def _indice_existe_tabla(tabla, indice):
+    try:
+        fila = ejecutar_consulta(
+            """
+            SELECT COUNT(*) AS total
+            FROM information_schema.statistics
+            WHERE table_schema = DATABASE() AND table_name = %s AND index_name = %s
+            """,
+            (tabla, indice),
+            una_fila=True,
+        )
+        return bool(fila and fila.get("total", 0) > 0)
+    except Error:
+        return False
+
+
 def asegurar_modelo_tickets():
     try:
         ejecutar_consulta(
@@ -791,6 +807,30 @@ def asegurar_modelo_servicios():
             "UPDATE servicios SET prioridad = 3 WHERE prioridad IS NULL OR prioridad < 1 OR prioridad > 5",
             confirmar=True,
         )
+    except Error:
+        return False
+    return True
+
+
+def asegurar_modelo_auth_social():
+    try:
+        if not _columna_existe_tabla("usuarios", "firebase_uid"):
+            ejecutar_consulta(
+                "ALTER TABLE usuarios ADD COLUMN firebase_uid VARCHAR(128) NULL",
+                confirmar=True,
+            )
+
+        if not _columna_existe_tabla("usuarios", "auth_provider"):
+            ejecutar_consulta(
+                "ALTER TABLE usuarios ADD COLUMN auth_provider VARCHAR(20) NULL",
+                confirmar=True,
+            )
+
+        if not _indice_existe_tabla("usuarios", "idx_usuarios_firebase_uid"):
+            ejecutar_consulta(
+                "CREATE UNIQUE INDEX idx_usuarios_firebase_uid ON usuarios(firebase_uid)",
+                confirmar=True,
+            )
     except Error:
         return False
     return True

@@ -1,4 +1,7 @@
-from flask import flash, redirect, render_template, request, session, url_for
+import os
+
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
+from firebase_admin import auth as firebase_auth
 from mysql.connector import Error
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -14,6 +17,11 @@ from validaciones import (
 
 
 def registrar_rutas_auth(app):
+    def _abrir_sesion_local(usuario):
+        session["usuario_id"] = usuario["id"]
+        session["rol"] = normalizar_rol(usuario["rol"])
+        session["nombres"] = usuario["nombres"]
+
     @app.route("/registro", methods=["GET", "POST"])
     def registro():
         if request.method == "POST":
@@ -108,9 +116,7 @@ def registrar_rutas_auth(app):
                 flash("Credenciales inválidas.", "error")
                 return redirect(url_for("login"))
 
-            session["usuario_id"] = usuario["id"]
-            session["rol"] = normalizar_rol(usuario["rol"])
-            session["nombres"] = usuario["nombres"]
+            _abrir_sesion_local(usuario)
 
             return redirect(redireccion_por_rol(usuario["rol"]))
 
@@ -121,3 +127,95 @@ def registrar_rutas_auth(app):
         session.clear()
         flash("Sesión cerrada correctamente.", "exito")
         return redirect(url_for("inicio"))
+
+    @app.route("/auth/firebase/google", methods=["POST"])
+    def auth_firebase_google():
+        data = request.get_json(silent=True) or {}
+        id_token = (data.get("token") or "").strip()
+        if not id_token:
+            return jsonify({"ok": False, "mensaje": "Token faltante."}), 400
+
+        try:
+            decoded = firebase_auth.verify_id_token(id_token)
+        except Exception:
+            return jsonify({"ok": False, "mensaje": "Token inválido de Firebase."}), 401
+
+        firebase_uid = (decoded.get("uid") or "").strip()
+        correo = (decoded.get("email") or "").strip().lower()
+        nombre_completo = limpiar_texto(decoded.get("name") or "Usuario")
+        nombres = nombre_completo
+        apellidos = ""
+
+        if " " in nombre_completo:
+            partes = nombre_completo.split(" ", 1)
+            nombres = partes[0]
+            apellidos = partes[1]
+
+        if not firebase_uid or not correo:
+            return jsonify({"ok": False, "mensaje": "El token no contiene datos suficientes."}), 400
+
+        try:
+            usuario = ejecutar_consulta(
+                """
+                SELECT id, correo, nombres, rol, activo
+                FROM usuarios
+                WHERE firebase_uid = %s
+                LIMIT 1
+                """,
+                (firebase_uid,),
+                una_fila=True,
+            )
+
+            if not usuario:
+                usuario = ejecutar_consulta(
+                    """
+                    SELECT id, correo, nombres, rol, activo
+                    FROM usuarios
+                    WHERE correo = %s
+                    LIMIT 1
+                    """,
+                    (correo,),
+                    una_fila=True,
+                )
+
+                if usuario:
+                    ejecutar_consulta(
+                        """
+                        UPDATE usuarios
+                        SET firebase_uid = %s, auth_provider = 'google'
+                        WHERE id = %s
+                        """,
+                        (firebase_uid, usuario["id"]),
+                        confirmar=True,
+                    )
+
+            if not usuario:
+                hash_placeholder = generate_password_hash(os.urandom(24).hex())
+                usuario_id = ejecutar_consulta(
+                    """
+                    INSERT INTO usuarios (
+                        correo, contrasena_hash, nombres, apellidos, numero, rol, activo, firebase_uid, auth_provider
+                    )
+                    VALUES (%s, %s, %s, %s, '', 'cliente', 1, %s, 'google')
+                    """,
+                    (correo, hash_placeholder, nombres, apellidos, firebase_uid),
+                    confirmar=True,
+                )
+                usuario = ejecutar_consulta(
+                    """
+                    SELECT id, correo, nombres, rol, activo
+                    FROM usuarios
+                    WHERE id = %s
+                    LIMIT 1
+                    """,
+                    (usuario_id,),
+                    una_fila=True,
+                )
+
+            if not usuario or not usuario.get("activo"):
+                return jsonify({"ok": False, "mensaje": "Usuario no disponible para iniciar sesión."}), 403
+
+            _abrir_sesion_local(usuario)
+            return jsonify({"ok": True, "redirect": redireccion_por_rol(usuario["rol"])})
+        except Error:
+            return jsonify({"ok": False, "mensaje": "No fue posible procesar inicio con Google."}), 500

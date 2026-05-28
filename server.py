@@ -6,9 +6,11 @@ from dotenv import load_dotenv
 from app_core import (
     NEGOCIO,
     POLITICA_DOMICILIO,
+    asegurar_modelo_auth_social,
     asegurar_modelo_tickets,
     normalizar_rol,
 )
+from firebase_admin_setup import inicializar_firebase_admin
 from panel_routes import registrar_rutas_panel
 from routes_auth import registrar_rutas_auth
 from routes_public import registrar_rutas_publicas
@@ -16,6 +18,7 @@ from routes_public import registrar_rutas_publicas
 
 app = Flask(__name__)
 load_dotenv()
+inicializar_firebase_admin()
 app.config["SECRET_KEY"] = os.getenv("CLAVE_SECRETA", "cambio-en-produccion")
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -48,6 +51,7 @@ def inyectar_datos_globales():
 registrar_rutas_publicas(app)
 registrar_rutas_auth(app)
 registrar_rutas_panel(app)
+asegurar_modelo_auth_social()
 asegurar_modelo_tickets()
 
 

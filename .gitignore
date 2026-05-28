@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .env
 respaldo_local.sql
+serviceAccountKey.json
+firebase-service-account.json
+*-firebase-adminsdk-*.json
