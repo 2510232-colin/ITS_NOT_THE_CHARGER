@@ -9,7 +9,7 @@ def inicializar_firebase_admin():
     if firebase_admin._apps:
         return True
 
-    cred_path = (os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH") or "").strip()
+    cred_path = (os.getenv("FIREBASE_CREDENTIALS") or "").strip()
     if not cred_path:
         return False
 
